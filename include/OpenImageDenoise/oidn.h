@@ -82,11 +82,12 @@ typedef enum
 {
   OIDN_DEVICE_TYPE_DEFAULT = 0, // select device automatically
 
-  OIDN_DEVICE_TYPE_CPU   = 1, // CPU device
-  OIDN_DEVICE_TYPE_SYCL  = 2, // SYCL device
-  OIDN_DEVICE_TYPE_CUDA  = 3, // CUDA device
-  OIDN_DEVICE_TYPE_HIP   = 4, // HIP device
-  OIDN_DEVICE_TYPE_METAL = 5, // Metal device
+  OIDN_DEVICE_TYPE_CPU    = 1, // CPU device
+  OIDN_DEVICE_TYPE_SYCL   = 2, // SYCL device
+  OIDN_DEVICE_TYPE_CUDA   = 3, // CUDA device
+  OIDN_DEVICE_TYPE_HIP    = 4, // HIP device
+  OIDN_DEVICE_TYPE_METAL  = 5, // Metal device
+  OIDN_DEVICE_TYPE_VULKAN = 6, // Vulkan device
 } OIDNDeviceType;
 
 // Error codes

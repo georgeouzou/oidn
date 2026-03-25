@@ -187,3 +187,7 @@ endif()
 if(OIDN_DEVICE_METAL)
   add_subdirectory(metal)
 endif()
+
+if(OIDN_DEVICE_VULKAN)
+  add_subdirectory(vulkan)
+endif()

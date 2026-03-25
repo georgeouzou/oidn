@@ -25,6 +25,7 @@ include(oidn_common)
 
 # Devices
 option(OIDN_DEVICE_CPU "Enable CPU device." ON)
+option(OIDN_DEVICE_VULKAN "Enable Vulkan device." OFF)
 if(NOT APPLE)
   if(OIDN_ARCH STREQUAL "X64")
     option(OIDN_DEVICE_SYCL "Enable SYCL device." OFF)

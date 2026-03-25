@@ -85,6 +85,10 @@ OIDN_NAMESPACE_BEGIN
       if (initDeviceType(deviceType, DeviceType::Metal, "OIDN_DEVICE_METAL"))
         OIDN_INIT_STATIC_MODULE(device_metal);
     #endif
+    #if defined(OIDN_DEVICE_VULKAN)
+      if (initDeviceType(deviceType, DeviceType::Vulkan, "OIDN_DEVICE_VULKAN"))
+        OIDN_INIT_MODULE(device_vulkan);
+    #endif
 
       if (deviceType == DeviceType::Default)
         fullyInited = true;

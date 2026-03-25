@@ -45,12 +45,13 @@ OIDN_NAMESPACE_BEGIN
   {
     switch (deviceType)
     {
-    case DeviceType::Default: sm << "default"; break;
-    case DeviceType::CPU:     sm << "CPU";     break;
-    case DeviceType::SYCL:    sm << "SYCL";    break;
-    case DeviceType::CUDA:    sm << "CUDA";    break;
-    case DeviceType::HIP:     sm << "HIP";     break;
-    case DeviceType::Metal:   sm << "Metal";   break;
+    case DeviceType::Default:  sm << "default";  break;
+    case DeviceType::CPU:      sm << "CPU";      break;
+    case DeviceType::SYCL:     sm << "SYCL";     break;
+    case DeviceType::CUDA:     sm << "CUDA";     break;
+    case DeviceType::HIP:      sm << "HIP";      break;
+    case DeviceType::Metal:    sm << "Metal";    break;
+    case DeviceType::Vulkan:   sm << "Vulkan";   break;
     default:
       throw std::invalid_argument("invalid device type");
     }
@@ -76,6 +77,8 @@ OIDN_NAMESPACE_BEGIN
       deviceType = DeviceType::HIP;
     else if (str == "metal")
       deviceType = DeviceType::Metal;
+    else if (str == "vulkan")
+      deviceType = DeviceType::Vulkan;
     else
       throw std::invalid_argument("invalid device type");
 
