@@ -50,4 +50,11 @@ OIDN_NAMESPACE_BEGIN
     virtual Ref<Device> newDevice(const MTLCommandQueue_id* commandQueues, int numQueues) = 0;
   };
 
+  class VulkanDeviceFactoryBase : public DeviceFactory
+  {
+  public:
+    using DeviceFactory::newDevice;
+
+  };
+
 OIDN_NAMESPACE_END
