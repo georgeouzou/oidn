@@ -222,4 +222,23 @@ OIDN_NAMESPACE_BEGIN
     vkDestroyDevice(device, nullptr);
   }
 
+  void VulkanDevice::init()
+  {
+    // required feature checks are done on physical device level.
+    // We cannot create the device and then query for support
+    if (!isSupported(*physicalDevice))
+      throw Exception(Error::UnsupportedHardware, "unsupported Vulkan device");
+
+    // Print device info
+    if (isVerbose())
+    {
+      VkPhysicalDeviceProperties props;
+      vkGetPhysicalDeviceProperties(*physicalDevice, &props);
+      std::cout << "  Device    : " << props.deviceName << std::endl;
+      std::cout << "    Type    : Vulkan" << std::endl;
+    }
+
+    // more TODO here
+  }
+
 OIDN_NAMESPACE_END

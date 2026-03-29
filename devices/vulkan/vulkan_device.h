@@ -50,7 +50,7 @@ OIDN_NAMESPACE_BEGIN
     void wait() override { /* TODO */ }
 
   private:
-    void init() override { /* TODO */ }
+    void init() override;
 
     Ref<VulkanPhysicalDevice> physicalDevice;
     VkDevice device = VK_NULL_HANDLE;
