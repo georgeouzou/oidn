@@ -18,6 +18,7 @@ find_package(Vulkan 1.2 REQUIRED)
 set(OIDN_VULKAN_SOURCES
   vulkan_module.cpp
   vulkan_device.cpp
+  vulkan_engine.cpp
 )
 
 add_library(OpenImageDenoise_device_vulkan SHARED

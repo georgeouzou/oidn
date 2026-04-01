@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "vulkan_device.h"
-#include "core/engine.h"
+#include "vulkan_engine.h"
 #include "core/subdevice.h"
 #include "core/exception.h"
 #include <cstring>
@@ -238,7 +238,9 @@ OIDN_NAMESPACE_BEGIN
       std::cout << "    Type    : Vulkan" << std::endl;
     }
 
-    // more TODO here
+    // TODO: Set device properties
+
+    subdevices.emplace_back(new Subdevice(std::unique_ptr<Engine>(new VulkanEngine(this))));
   }
 
 OIDN_NAMESPACE_END
