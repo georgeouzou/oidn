@@ -30,8 +30,6 @@ OIDN_NAMESPACE_BEGIN
     operator VkPhysicalDevice() { return pDev; }
 
   private:
-    bool supportsExtension(const char *extensionName) const;
-
     Ref<VulkanInstance> instance;
     VkPhysicalDevice pDev = VK_NULL_HANDLE;
   };

@@ -35,6 +35,23 @@ namespace
 
     return VulkanQueueInfo { graphicsQueueFamilyIndex };
   }
+
+  bool supportsExtension(VkPhysicalDevice pDev, const char* extensionName)
+  {
+    uint32_t numExtensions = 0;
+    VkResult res = vkEnumerateDeviceExtensionProperties(pDev, nullptr, &numExtensions, nullptr);
+    if (res != VK_SUCCESS) return false;
+    std::vector<VkExtensionProperties> extensions(numExtensions);
+    res = vkEnumerateDeviceExtensionProperties(pDev, nullptr, &numExtensions, extensions.data());
+    if (res != VK_SUCCESS) return false;
+
+    const size_t len = strnlen(extensionName, VK_MAX_EXTENSION_NAME_SIZE);
+    return std::find_if(extensions.begin(), extensions.end(),
+      [&](const VkExtensionProperties& p)
+    {
+      return memcmp(p.extensionName, extensionName, len) == 0;
+    }) != extensions.end();
+  }
 }
 
 OIDN_NAMESPACE_BEGIN
@@ -95,7 +112,7 @@ OIDN_NAMESPACE_BEGIN
       instance(instance),
       pDev(pDev)
   {
-    const bool hasPCIBusInfo = supportsExtension(VK_EXT_PCI_BUS_INFO_EXTENSION_NAME);
+    const bool hasPCIBusInfo = supportsExtension(pDev, VK_EXT_PCI_BUS_INFO_EXTENSION_NAME);
     VkPhysicalDeviceProperties2 props = {
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, 0 };
     VkPhysicalDeviceVulkan11Properties v11Props = {
@@ -133,24 +150,6 @@ OIDN_NAMESPACE_BEGIN
       pciFunction = pciProps.pciFunction;
       pciAddressSupported = true;
     }
-  }
-
-  bool VulkanPhysicalDevice::supportsExtension(const char *extensionName) const
-  {
-    uint32_t numExtensions = 0;
-    std::vector<VkExtensionProperties> extensions;
-    VkResult res = vkEnumerateDeviceExtensionProperties(pDev, nullptr, &numExtensions, nullptr);
-    checkResult(res);
-    extensions.resize(numExtensions);
-    res = vkEnumerateDeviceExtensionProperties(pDev, nullptr, &numExtensions, extensions.data());
-
-    const size_t extensionNameLen = strnlen(extensionName, VK_MAX_EXTENSION_NAME_SIZE);
-    auto it = std::find_if(extensions.begin(), extensions.end(),
-      [&](const VkExtensionProperties &p)
-    {
-        return memcmp(p.extensionName, extensionName, extensionNameLen) == 0;
-    });
-    return it != extensions.end();
   }
 
   std::vector<Ref<PhysicalDevice>> VulkanDevice::getPhysicalDevices()
