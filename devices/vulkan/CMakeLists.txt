@@ -19,6 +19,9 @@ set(OIDN_VULKAN_SOURCES
   vulkan_module.cpp
   vulkan_device.cpp
   vulkan_engine.cpp
+  vulkan_buffer.cpp
+  vulkan_heap.cpp
+  vulkan_common.cpp
 )
 
 add_library(OpenImageDenoise_device_vulkan SHARED

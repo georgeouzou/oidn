@@ -182,16 +182,29 @@ OIDN_NAMESPACE_BEGIN
   bool VulkanDevice::isSupported(VkPhysicalDevice pDev)
   {
     assert(pDev != VK_NULL_HANDLE);
-    // filter out gpus not supporting vulkan 1.2
+    // filter out gpus not supporting vulkan 1.2,
+    // we can then use vkGetPhysicalDeviceFeatures2 (minimum required vulkan 1.1)
     VkPhysicalDeviceProperties props;
     vkGetPhysicalDeviceProperties(pDev, &props);
     const uint32_t major = VK_VERSION_MAJOR(props.apiVersion);
     const uint32_t minor = VK_VERSION_MINOR(props.apiVersion);
+    if (major == 1 && minor < 2)
+      return false;
 
     const VulkanQueueInfo queueInfo = queryQueueInfo(pDev);
     const bool hasGraphics = queueInfo.graphicsQueueFamily.has_value();
 
-    return !(major == 1 && minor < 2) && hasGraphics;
+    const bool hasMaintenance4 = supportsExtension(pDev, VK_KHR_MAINTENANCE_4_EXTENSION_NAME);
+    // Spec: If VK_KHR_maintenance4 is supported, maintenance4 must be supported
+
+    VkPhysicalDeviceVulkan12Features v12Features = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES, 0 };
+    VkPhysicalDeviceFeatures2 feats = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, 0 };
+    feats.pNext = &v12Features;
+    vkGetPhysicalDeviceFeatures2(pDev, &feats);
+
+    return hasGraphics && hasMaintenance4 && v12Features.bufferDeviceAddress == VK_TRUE;
   }
 
   VulkanDevice::VulkanDevice(const Ref<VulkanPhysicalDevice>& physicalDevice)
@@ -210,13 +223,31 @@ OIDN_NAMESPACE_BEGIN
     qci.pQueuePriorities = queuePriorities;
     qci.queueFamilyIndex = queueFamilyIndex;
 
+    VkPhysicalDeviceVulkan12Features v12Features = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES, 0 };
+    v12Features.bufferDeviceAddress = VK_TRUE;
+
+    VkPhysicalDeviceMaintenance4FeaturesKHR maint4Features = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES_KHR, 0 };
+    maint4Features.maintenance4 = VK_TRUE;
+    v12Features.pNext = &maint4Features;
+
+    const char* extensions[] = { VK_KHR_MAINTENANCE_4_EXTENSION_NAME };
+
     VkDeviceCreateInfo ci = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO, 0 };
     ci.queueCreateInfoCount = 1;
     ci.pQueueCreateInfos = &qci;
+    ci.pNext = &v12Features;
+    ci.enabledExtensionCount = 1;
+    ci.ppEnabledExtensionNames = extensions;
     VkResult res = vkCreateDevice(*physicalDevice, &ci, nullptr, &this->device);
     checkResult(res);
 
     vkGetDeviceQueue(device, queueFamilyIndex, 0, &queue);
+
+    vkGetDeviceBufferMemoryRequirements =
+      (PFN_vkGetDeviceBufferMemoryRequirementsKHR)vkGetDeviceProcAddr(device, "vkGetDeviceBufferMemoryRequirementsKHR");
+    assert(vkGetDeviceBufferMemoryRequirements != nullptr);
   }
 
   VulkanDevice::~VulkanDevice()

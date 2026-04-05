@@ -18,6 +18,16 @@ OIDN_NAMESPACE_BEGIN
 
     // Vulkan
     VkDevice getVkDevice() const { return *device; }
+    VkPhysicalDevice getVkPhysicalDevice() const { return *device; }
+
+    // Heap
+    Ref<Heap> newHeap(size_t byteSize, Storage storage) override;
+
+    // Buffer
+    SizeAndAlignment getBufferByteSizeAndAlignment(size_t byteSize, Storage storage) override;
+    Ref<Buffer> newBuffer(size_t byteSize, Storage storage) override;
+    Ref<Buffer> newBuffer(void* ptr, size_t byteSize) override;
+    Ref<Buffer> newBuffer(const Ref<Arena>& arena, size_t byteSize, size_t byteOffset) override;
 
     // Ops
     Ref<Conv> newConv(const ConvDesc& desc) override;
@@ -36,10 +46,12 @@ OIDN_NAMESPACE_BEGIN
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer cmdBuf);
 
-  private:
+    VkDeviceSize getMaxBufferSize() const { return maxBufferSize; }
 
+  private:
     VulkanDevice* device = nullptr;
     VkCommandPool commandPool = VK_NULL_HANDLE;
+    VkDeviceSize maxBufferSize = 0;
   };
 
 OIDN_NAMESPACE_END

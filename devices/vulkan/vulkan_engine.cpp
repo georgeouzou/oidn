@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "vulkan_engine.h"
+#include "vulkan_buffer.h"
+#include "vulkan_heap.h"
+#include "vulkan_common.h"
 
 #include "core/conv.h"
 #include "devices/gpu/gpu_input_process.h"
@@ -16,6 +19,12 @@ OIDN_NAMESPACE_BEGIN
   VulkanEngine::VulkanEngine(VulkanDevice* device, const VulkanQueue& queue)
     : device(device)
   {
+    VkPhysicalDeviceMaintenance4PropertiesKHR maint4Props = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_PROPERTIES_KHR, 0 };
+    VkPhysicalDeviceProperties2 props2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, 0 };
+    props2.pNext = &maint4Props;
+    vkGetPhysicalDeviceProperties2(*device, &props2);
+    maxBufferSize = maint4Props.maxBufferSize;
+
     VkCommandPoolCreateInfo cpci = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO, 0 };
     cpci.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
     cpci.queueFamilyIndex = queue.familyIndex;
@@ -27,6 +36,43 @@ OIDN_NAMESPACE_BEGIN
   VulkanEngine::~VulkanEngine()
   {
     vkDestroyCommandPool(*device, commandPool, nullptr);
+  }
+
+  Ref<Heap> VulkanEngine::newHeap(size_t byteSize, Storage storage)
+  {
+    return makeRef<VulkanHeap>(this, byteSize, storage);
+  }
+
+  SizeAndAlignment VulkanEngine::getBufferByteSizeAndAlignment(size_t byteSize, Storage storage)
+  {
+    VkBufferCreateInfo bci = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, 0 };
+    bci.size = byteSize;
+    bci.usage = getCommonVkBufferUsageFlags();
+    bci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    VkDeviceBufferMemoryRequirementsKHR dbmr = { VK_STRUCTURE_TYPE_DEVICE_BUFFER_MEMORY_REQUIREMENTS_KHR, 0 };
+    dbmr.pCreateInfo = &bci;
+
+    VkMemoryRequirements2 mr = { VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2, 0 };
+    device->getDeviceBufferMemoryRequirements(&dbmr, &mr);
+
+    return { static_cast<size_t>(mr.memoryRequirements.size),
+             static_cast<size_t>(mr.memoryRequirements.alignment) };
+  }
+
+  Ref<Buffer> VulkanEngine::newBuffer(size_t byteSize, Storage storage)
+  {
+    return makeRef<VulkanBuffer>(this, byteSize, storage);
+  }
+
+  Ref<Buffer> VulkanEngine::newBuffer(void* ptr, size_t byteSize)
+  {
+    return makeRef<VulkanBuffer>(this, ptr, byteSize);
+  }
+
+  Ref<Buffer> VulkanEngine::newBuffer(const Ref<Arena>& arena, size_t byteSize, size_t byteOffset)
+  {
+    return makeRef<VulkanBuffer>(arena, byteSize, byteOffset);
   }
 
   Ref<Conv> VulkanEngine::newConv(const ConvDesc& desc)
