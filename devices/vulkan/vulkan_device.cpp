@@ -200,6 +200,7 @@ OIDN_NAMESPACE_BEGIN
     const VulkanQueueInfo queueInfo = queryQueueInfo(*physicalDevice);
     // TODO for now physical devices can only be created from us
     assert(queueInfo.graphicsQueueFamily.has_value());
+    queueFamilyIndex = *queueInfo.graphicsQueueFamily;
 
     const float queuePriorities[] = { 1.0f };
 
@@ -207,17 +208,20 @@ OIDN_NAMESPACE_BEGIN
       VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, 0 };
     qci.queueCount = 1;
     qci.pQueuePriorities = queuePriorities;
-    qci.queueFamilyIndex = *queueInfo.graphicsQueueFamily;
+    qci.queueFamilyIndex = queueFamilyIndex;
 
     VkDeviceCreateInfo ci = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO, 0 };
     ci.queueCreateInfoCount = 1;
     ci.pQueueCreateInfos = &qci;
     VkResult res = vkCreateDevice(*physicalDevice, &ci, nullptr, &this->device);
     checkResult(res);
+
+    vkGetDeviceQueue(device, queueFamilyIndex, 0, &queue);
   }
 
   VulkanDevice::~VulkanDevice()
   {
+    subdevices.clear();
     vkDestroyDevice(device, nullptr);
   }
 
@@ -239,7 +243,13 @@ OIDN_NAMESPACE_BEGIN
 
     // TODO: Set device properties
 
-    subdevices.emplace_back(new Subdevice(std::unique_ptr<Engine>(new VulkanEngine(this))));
+    subdevices.emplace_back(new Subdevice(std::unique_ptr<Engine>(new VulkanEngine(this, getQueue()))));
+  }
+
+  void VulkanDevice::wait()
+  {
+    if (!subdevices.empty())
+      subdevices[0]->getEngine()->wait();
   }
 
 OIDN_NAMESPACE_END

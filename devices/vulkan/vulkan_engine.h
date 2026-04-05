@@ -7,13 +7,17 @@
 #include "vulkan_device.h"
 
 OIDN_NAMESPACE_BEGIN
+
   class VulkanEngine : public Engine
   {
   public:
-    explicit VulkanEngine(VulkanDevice* device);
+    explicit VulkanEngine(VulkanDevice* device, const VulkanQueue& queue);
     ~VulkanEngine();
 
     Device* getDevice() const override { return device; }
+
+    // Vulkan
+    VkDevice getVkDevice() const { return *device; }
 
     // Ops
     Ref<Conv> newConv(const ConvDesc& desc) override;
@@ -28,8 +32,14 @@ OIDN_NAMESPACE_BEGIN
     void submitHostFunc(std::function<void()>&& f, const Ref<CancellationToken>& ct) override;
 
     void wait() override;
+
+    VkCommandBuffer beginSingleTimeCommands();
+    void endSingleTimeCommands(VkCommandBuffer cmdBuf);
+
   private:
-    VulkanDevice* device;
+
+    VulkanDevice* device = nullptr;
+    VkCommandPool commandPool = VK_NULL_HANDLE;
   };
 
 OIDN_NAMESPACE_END

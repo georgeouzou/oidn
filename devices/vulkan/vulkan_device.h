@@ -8,6 +8,12 @@
 
 OIDN_NAMESPACE_BEGIN
 
+  struct VulkanQueue
+  {
+    VkQueue queue = VK_NULL_HANDLE;
+    uint32_t familyIndex = 0;
+  };
+
   void checkResult(VkResult result);
 
   class VulkanInstance : public RefCount
@@ -45,13 +51,19 @@ OIDN_NAMESPACE_BEGIN
 
     DeviceType getType() const override { return DeviceType::Vulkan; }
 
-    void wait() override { /* TODO */ }
+    void wait() override;
+
+    operator VkDevice() const { return device; }
+    operator VkPhysicalDevice() const { return *physicalDevice; }
+    VulkanQueue getQueue() const { return { queue, queueFamilyIndex }; }
 
   private:
     void init() override;
 
     Ref<VulkanPhysicalDevice> physicalDevice;
     VkDevice device = VK_NULL_HANDLE;
+    VkQueue queue = VK_NULL_HANDLE;
+    uint32_t queueFamilyIndex = 0;
   };
 
 OIDN_NAMESPACE_END
