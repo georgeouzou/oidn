@@ -199,12 +199,23 @@ OIDN_NAMESPACE_BEGIN
 
     VkPhysicalDeviceVulkan12Features v12Features = {
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES, 0 };
+    VkPhysicalDeviceVulkan11Features v11Features = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES, 0 };
     VkPhysicalDeviceFeatures2 feats = {
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, 0 };
-    feats.pNext = &v12Features;
+
+    feats.pNext = &v11Features;
+    v11Features.pNext = &v12Features;
+
     vkGetPhysicalDeviceFeatures2(pDev, &feats);
 
-    return hasGraphics && hasMaintenance4 && v12Features.bufferDeviceAddress == VK_TRUE;
+    // slangc has a bug that requires int64 for buffer device address casting in shaders
+    // so require this feature. (it could use uvec2 instead)
+    const bool hasBufferDeviceAddress = v12Features.bufferDeviceAddress == VK_TRUE && feats.features.shaderInt64;
+    const bool hasStorage16 = v11Features.storageBuffer16BitAccess == VK_TRUE;
+    const bool hasFloat16 = v12Features.shaderFloat16 == VK_TRUE;
+
+    return hasGraphics && hasMaintenance4 && hasBufferDeviceAddress && hasStorage16 && hasFloat16;
   }
 
   VulkanDevice::VulkanDevice(const Ref<VulkanPhysicalDevice>& physicalDevice)
@@ -223,13 +234,25 @@ OIDN_NAMESPACE_BEGIN
     qci.pQueuePriorities = queuePriorities;
     qci.queueFamilyIndex = queueFamilyIndex;
 
+    VkPhysicalDeviceFeatures2 feats = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, 0 };
+    feats.features.shaderInt64 = VK_TRUE;
+
+    VkPhysicalDeviceVulkan11Features v11Features = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES, 0 };
+    v11Features.storageBuffer16BitAccess = VK_TRUE;
+
     VkPhysicalDeviceVulkan12Features v12Features = {
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES, 0 };
     v12Features.bufferDeviceAddress = VK_TRUE;
+    v12Features.shaderFloat16 = VK_TRUE;
 
     VkPhysicalDeviceMaintenance4FeaturesKHR maint4Features = {
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES_KHR, 0 };
     maint4Features.maintenance4 = VK_TRUE;
+
+    feats.pNext = &v11Features;
+    v11Features.pNext = &v12Features;
     v12Features.pNext = &maint4Features;
 
     const char* extensions[] = { VK_KHR_MAINTENANCE_4_EXTENSION_NAME };
@@ -237,7 +260,7 @@ OIDN_NAMESPACE_BEGIN
     VkDeviceCreateInfo ci = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO, 0 };
     ci.queueCreateInfoCount = 1;
     ci.pQueueCreateInfos = &qci;
-    ci.pNext = &v12Features;
+    ci.pNext = &feats;
     ci.enabledExtensionCount = 1;
     ci.ppEnabledExtensionNames = extensions;
     VkResult res = vkCreateDevice(*physicalDevice, &ci, nullptr, &this->device);
@@ -272,7 +295,11 @@ OIDN_NAMESPACE_BEGIN
       std::cout << "    Type    : Vulkan" << std::endl;
     }
 
-    // TODO: Set device properties
+    tensorDataType = DataType::Float16;
+    weightDataType = DataType::Float16;
+    tensorLayout   = TensorLayout::hwc;
+    weightLayout   = TensorLayout::oihw;
+    tensorBlockC   = 1;
 
     subdevices.emplace_back(new Subdevice(std::unique_ptr<Engine>(new VulkanEngine(this, getQueue()))));
   }
