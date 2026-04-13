@@ -19,8 +19,14 @@ message(STATUS "Found slangc: ${SLANG_COMPILER}")
 # Builds SPIRV from the given slang shader sources and
 # adds C++ sources generated from the SPIRV binary blob to the specified target
 function(slang_target_add_sources target module_name)
-  set(options SOURCES ENTRY_POINTS)
+  set(options SOURCES INCLUDE_DIRECTORIES ENTRY_POINTS)
   cmake_parse_arguments(PARSE_ARGV 2 SLANG "" "" "${options}")
+
+  set(include_dirs "")
+  foreach(inc ${SLANG_INCLUDE_DIRECTORIES})
+    file(TO_NATIVE_PATH "${inc}" inc_native_path)
+    list(APPEND include_dirs "-I${inc_native_path}")
+  endforeach()
 
   set(src ${SLANG_SOURCES})
   get_filename_component(src_file ${src} ABSOLUTE)
@@ -36,6 +42,7 @@ function(slang_target_add_sources target module_name)
     add_custom_command(
       OUTPUT ${spirv_file}
       COMMAND ${SLANG_COMPILER}
+        ${include_dirs}
         -target spirv
         -stage compute
         -entry ${entry}

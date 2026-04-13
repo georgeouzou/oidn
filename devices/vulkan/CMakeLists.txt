@@ -32,8 +32,13 @@ add_library(OpenImageDenoise_device_vulkan SHARED
 )
 
 slang_target_add_sources(OpenImageDenoise_device_vulkan vulkan_kernels
-  SOURCES vulkan_kernels.slang
-  ENTRY_POINTS inputProcess1 inputProcess2 inputProcess3
+  SOURCES
+    vulkan_kernels.slang
+  INCLUDE_DIRECTORIES
+    ${OIDN_ROOT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}
+  ENTRY_POINTS
+    inputProcess1 inputProcess2 inputProcess3
 )
 
 set_target_properties(OpenImageDenoise_device_vulkan PROPERTIES
