@@ -307,13 +307,13 @@ OIDN_NAMESPACE_BEGIN
       if (tileH > minTileH && tileH > tileW)
       {
         const int newTileH = ceil_div(H + (2*tileOverlap+tilePadH) * tileCountH, tileCountH + 1);
-        tileH = clamp(round_up(newTileH, tileAlignment, tilePadH), minTileH, tileH - tileAlignment);
+        tileH = math::clamp(round_up(newTileH, tileAlignment, tilePadH), minTileH, tileH - tileAlignment);
         tileCountH = max(ceil_div(H - (2*tileOverlap+tilePadH), tileH - (2*tileOverlap+tilePadH)), 1);
       }
       else if (tileW > minTileW)
       {
         const int newTileW = ceil_div(W + (2*tileOverlap+tilePadW) * tileCountW, tileCountW + 1);
-        tileW = clamp(round_up(newTileW, tileAlignment, tilePadW), minTileW, tileW - tileAlignment);
+        tileW = math::clamp(round_up(newTileW, tileAlignment, tilePadW), minTileW, tileW - tileAlignment);
         tileCountW = max(ceil_div(W - (2*tileOverlap+tilePadW), tileW - (2*tileOverlap+tilePadW)), 1);
       }
       else

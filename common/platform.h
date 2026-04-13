@@ -181,12 +181,6 @@ OIDN_NAMESPACE_BEGIN
   template<typename T>
   oidn_host_device_inline constexpr T max(T a, T b) { return (a < b) ? b : a; }
 
-  template<typename T>
-  oidn_host_device_inline constexpr T clamp(T x, T minVal, T maxVal)
-  {
-    return min(max(x, minVal), maxVal);
-  }
-
   // Returns ceil(a / b) for non-negative integers
   template<typename Int, typename IntB>
   oidn_host_device_inline constexpr Int ceil_div(Int a, IntB b)

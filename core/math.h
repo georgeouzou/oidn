@@ -63,7 +63,7 @@ namespace math {
 #endif
 
   template<typename T>
-  oidn_host_device_inline T clamp(T x, T minVal, T maxVal)
+  oidn_host_device_inline constexpr T clamp(T x, T minVal, T maxVal)
   {
     return min(max(x, minVal), maxVal);
   }
