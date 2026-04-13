@@ -8,6 +8,8 @@
 
 OIDN_NAMESPACE_BEGIN
 
+  class VulkanComputePipeline;
+
   class VulkanEngine : public Engine
   {
   public:
@@ -47,6 +49,8 @@ OIDN_NAMESPACE_BEGIN
     void endSingleTimeCommands(VkCommandBuffer cmdBuf);
 
     VkDeviceSize getMaxBufferSize() const { return maxBufferSize; }
+
+    Ref<VulkanComputePipeline> newComputePipeline(const uint32_t* spirvData, uint32_t spirvSize);
 
   private:
     VulkanDevice* device = nullptr;

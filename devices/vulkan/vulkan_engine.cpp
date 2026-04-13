@@ -4,6 +4,7 @@
 #include "vulkan_engine.h"
 #include "vulkan_buffer.h"
 #include "vulkan_heap.h"
+#include "vulkan_pipeline.h"
 #include "vulkan_common.h"
 
 #include "core/conv.h"
@@ -152,6 +153,12 @@ OIDN_NAMESPACE_BEGIN
     vkQueueWaitIdle(device->getQueue().queue);
 
     vkFreeCommandBuffers(getVkDevice(), commandPool, 1, &cmdBuf);
+  }
+
+  Ref<VulkanComputePipeline> VulkanEngine::newComputePipeline(const uint32_t* spirvData, uint32_t spirvSize)
+  {
+    VkDevice device = getVkDevice();
+    return makeRef<VulkanComputePipeline>(device, spirvData, spirvSize);
   }
 
 OIDN_NAMESPACE_END

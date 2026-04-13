@@ -15,6 +15,8 @@ project(OpenImageDenoise_device_vulkan
 # Vulkan SDK
 find_package(Vulkan 1.2 REQUIRED)
 
+include(oidn_slang)
+
 set(OIDN_VULKAN_SOURCES
   vulkan_module.cpp
   vulkan_device.cpp
@@ -22,10 +24,16 @@ set(OIDN_VULKAN_SOURCES
   vulkan_buffer.cpp
   vulkan_heap.cpp
   vulkan_common.cpp
+  vulkan_pipeline.cpp
 )
 
 add_library(OpenImageDenoise_device_vulkan SHARED
   ${OIDN_VULKAN_SOURCES}
+)
+
+slang_target_add_sources(OpenImageDenoise_device_vulkan vulkan_kernels
+  SOURCES vulkan_kernels.slang
+  ENTRY_POINTS inputProcess1 inputProcess2 inputProcess3
 )
 
 set_target_properties(OpenImageDenoise_device_vulkan PROPERTIES
