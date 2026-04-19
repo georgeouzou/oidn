@@ -41,6 +41,14 @@ namespace math {
   using metal::log2;
   using metal::exp;
   using metal::exp2;
+#elif defined(OIDN_COMPILE_VULKAN_DEVICE)
+  // use the built-in math functions
+  template<typename T> T pow(T x, T y) where T:__BuiltinFloatingPointType { return pow(x, y); }
+  template<typename T> T log(T x) where T:__BuiltinFloatingPointType { return log(x); }
+  template<typename T> T exp(T x) where T:__BuiltinFloatingPointType { return exp(x); }
+  template<typename T, int N> vector<T, N> pow(vector<T, N> x, T y) where T:__BuiltinFloatingPointType { return pow(x, y); }
+  template<typename T, int N> vector<T, N> log(vector<T, N> x) where T:__BuiltinFloatingPointType { return log(x); }
+  template<typename T, int N> vector<T, N> exp(vector<T, N> x) where T:__BuiltinFloatingPointType { return exp(x); }
 #else
   using OIDN_NAMESPACE::min;
   using OIDN_NAMESPACE::max;
@@ -63,7 +71,7 @@ namespace math {
 #endif
 
   template<typename T>
-  oidn_host_device_inline constexpr T clamp(T x, T minVal, T maxVal)
+  oidn_host_device_inline constexpr T clamp(T x, T minVal, T maxVal) WHERE(T, IArithmetic)
   {
     return min(max(x, minVal), maxVal);
   }

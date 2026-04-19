@@ -7,6 +7,7 @@
 
 OIDN_NAMESPACE_BEGIN
 namespace math {
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
 
   template<typename T>
   struct vec2
@@ -148,13 +149,35 @@ namespace math {
     return vec3<T>(clamp(v.x, minVal, maxVal), clamp(v.y, minVal, maxVal), clamp(v.z, minVal, maxVal));
   }
 
+#else  // defined(OIDN_COMPILE_VULKAN_DEVICE)
+
+  template<int N>
+  oidn_device_inline vector<float, N> nan_to_zero(vector<float, N> v)
+  {
+    vector<float, N> result;
+    [ForceUnroll]
+    for (int i = 0; i < N; i++)
+      result[i] = nan_to_zero(v[i]);
+    return result;
+  }
+
+#endif // !defined(OIDN_COMPILE_VULKAN_DEVICE)
 } // namespace math
 
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
 using math::vec2;
 using math::vec2f;
 using math::vec2i;
 using math::vec3;
 using math::vec3f;
 using math::vec3i;
+#else
+typealias vec2<T> = vector<T, 2>;
+typealias vec2f = vector<float, 2>;
+typealias vec2i = vector<int, 2>;
+typealias vec3<T> = vector<T, 3>;
+typealias vec3f = vector<float, 3>;
+typealias vec3i = vector<int, 3>;
+#endif
 
 OIDN_NAMESPACE_END

@@ -50,6 +50,8 @@ if(OIDN_LIBRARY_VERSIONED)
   set_target_properties(OpenImageDenoise_device_vulkan PROPERTIES VERSION ${PROJECT_VERSION})
 endif()
 
+target_compile_definitions(OpenImageDenoise_device_vulkan PRIVATE OIDN_COMPILE_VULKAN_HOST)
+
 target_link_libraries(OpenImageDenoise_device_vulkan
   PRIVATE OpenImageDenoise_core Vulkan::Vulkan)
 

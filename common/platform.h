@@ -44,7 +44,8 @@
 #endif
 
 #if defined(OIDN_COMPILE_SYCL_DEVICE) || defined(OIDN_COMPILE_CUDA_DEVICE) || \
-    defined(OIDN_COMPILE_HIP_DEVICE)  || defined(OIDN_COMPILE_METAL_DEVICE)
+    defined(OIDN_COMPILE_HIP_DEVICE)  || defined(OIDN_COMPILE_METAL_DEVICE) || \
+    defined(OIDN_COMPILE_VULKAN_DEVICE)
   #define OIDN_COMPILE_DEVICE
 #endif
 
@@ -65,11 +66,30 @@
   #define MAYBE_UNUSED(x) UNUSED(x)
 #endif
 
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
+  #define WHERE(x, y)
+#else
+  #define WHERE(x, y) where x : y
+#endif
+
+#if defined(OIDN_COMPILE_VULKAN_DEVICE)
+  #define template __generic
+#endif
+
 #if defined(OIDN_COMPILE_CUDA) || defined(OIDN_COMPILE_HIP)
   #define oidn_device __device__
   #define oidn_device_inline __device__ oidn_inline
   #define oidn_host_device __host__ __device__
   #define oidn_host_device_inline __host__ __device__ oidn_inline
+  #define oidn_constant
+  #define oidn_global
+  #define oidn_local
+  #define oidn_private
+#elif defined(OIDN_COMPILE_VULKAN_DEVICE)
+  #define oidn_device
+  #define oidn_device_inline [ForceInline]
+  #define oidn_host_device
+  #define oidn_host_device_inline [ForceInline]
   #define oidn_constant
   #define oidn_global
   #define oidn_local
@@ -105,6 +125,7 @@
 
 #if defined(OIDN_COMPILE_METAL_DEVICE)
   #include <metal_stdlib>
+#elif defined(OIDN_COMPILE_VULKAN_DEVICE)
 #else
   #if defined(_WIN32)
     #if !defined(WIN32_LEAN_AND_MEAN)
@@ -166,7 +187,7 @@ OIDN_NAMESPACE_BEGIN
   using sycl::half;
 #endif
 
-#if !defined(OIDN_COMPILE_METAL_DEVICE)
+#if !defined(OIDN_COMPILE_METAL_DEVICE) && !defined(OIDN_COMPILE_VULKAN_DEVICE)
   template<bool B, class T = void>
   using enable_if_t = typename std::enable_if<B, T>::type;
 #endif
@@ -175,6 +196,7 @@ OIDN_NAMESPACE_BEGIN
   // Common functions
   // -----------------------------------------------------------------------------------------------
 
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
   template<typename T>
   oidn_host_device_inline constexpr T min(T a, T b) { return (b < a) ? b : a; }
 
@@ -226,6 +248,7 @@ OIDN_NAMESPACE_BEGIN
   {
     return (a * b) / gcd(a, b);
   }
+#endif
 
   // -----------------------------------------------------------------------------------------------
   // Data type
@@ -240,7 +263,7 @@ OIDN_NAMESPACE_BEGIN
     Float32,
   };
 
-#if !defined(OIDN_COMPILE_METAL_DEVICE)
+#if !defined(OIDN_COMPILE_METAL_DEVICE) && !defined(OIDN_COMPILE_VULKAN_DEVICE)
 
   std::ostream& operator <<(std::ostream& sm, DataType dataType);
 
@@ -356,7 +379,7 @@ OIDN_NAMESPACE_BEGIN
   std::string getCompilerName();
   std::string getBuildName();
 
-#endif // !defined(OIDN_COMPILE_METAL_DEVICE)
+#endif // !defined(OIDN_COMPILE_METAL_DEVICE) && !defined(OIDN_COMPILE_VULKAN_DEVICE)
 
 OIDN_NAMESPACE_END
 
