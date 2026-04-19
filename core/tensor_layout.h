@@ -33,37 +33,72 @@ OIDN_NAMESPACE_BEGIN
   };
 
   // -----------------------------------------------------------------------------------------------
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
 
   template<TensorLayout layout>
   struct TensorLayoutTraits;
 
-  template<>
-  struct TensorLayoutTraits<TensorLayout::x>
+  #define TENSOR_LAYOUT_TRAITS_BYTE_OFFSET_DECL_BEGIN(DIMENSION, TYPE)\
+    template<>\
+    struct TensorLayoutTraits<TensorLayout::TYPE>\
+    {\
+      template<typename T>\
+      struct ByteOffset
+
+  #define TENSOR_LAYOUT_TRAITS_BYTE_OFFSET_DECL_END()\
+      ; /* end of ByteOffset struct */\
+    } /* end of TensorLayoutTraits struct */
+
+#else
+
+  template<typename T>
+  interface ITensorByteOffset1D
   {
-    template<typename T>
-    struct ByteOffset
-    {
+    uint32_t operator()(int x);
+  };
+
+  template<typename T>
+  interface ITensorByteOffset3D
+  {
+    uint32_t operator()(int c, int h, int w);
+  };
+
+  template<typename T>
+  interface ITensorByteOffset4D
+  {
+    uint32_t operator()(int o, int i, int h, int w);
+  };
+
+  #define TENSOR_LAYOUT_TRAITS_BYTE_OFFSET_DECL_BEGIN(DIMENSION, TYPE)\
+    template<typename T>\
+    struct TensorByteOffset_##TYPE : ITensorByteOffset##DIMENSION<T>
+
+  #define TENSOR_LAYOUT_TRAITS_BYTE_OFFSET_DECL_END()
+
+#endif
+
+  TENSOR_LAYOUT_TRAITS_BYTE_OFFSET_DECL_BEGIN(1D, x)
+  {
       static constexpr oidn_constant uint32_t xByteStride = sizeof(T);
 
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
       ByteOffset() = default;
+#endif
 
-      oidn_host_device_inline uint32_t operator ()(int x) const
+      oidn_host_device_inline uint32_t operator ()(int x) oidn_const_func
       {
         return uint32_t(x) * xByteStride;
       }
-    };
-  };
+  }
+  TENSOR_LAYOUT_TRAITS_BYTE_OFFSET_DECL_END();
 
-  template<>
-  struct TensorLayoutTraits<TensorLayout::chw>
+  TENSOR_LAYOUT_TRAITS_BYTE_OFFSET_DECL_BEGIN(3D, chw)
   {
-    template<typename T>
-    struct ByteOffset
-    {
       static constexpr oidn_constant uint32_t wByteStride = sizeof(T);
       uint32_t hByteStride;
       uint32_t cByteStride;
 
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
       ByteOffset() = default;
 
       oidn_host_device_inline ByteOffset(int C, int H, int W)
@@ -71,26 +106,24 @@ OIDN_NAMESPACE_BEGIN
         hByteStride = uint32_t(W) * wByteStride;
         cByteStride = uint32_t(H) * hByteStride;
       }
+#endif
 
-      oidn_host_device_inline uint32_t operator ()(int c, int h, int w) const
+      oidn_host_device_inline uint32_t operator ()(int c, int h, int w) oidn_const_func
       {
         return uint32_t(c) * cByteStride +
                uint32_t(h) * hByteStride +
                uint32_t(w) * wByteStride;
       }
-    };
-  };
+  }
+  TENSOR_LAYOUT_TRAITS_BYTE_OFFSET_DECL_END();
 
-  template<>
-  struct TensorLayoutTraits<TensorLayout::hwc>
+  TENSOR_LAYOUT_TRAITS_BYTE_OFFSET_DECL_BEGIN(3D, hwc)
   {
-    template<typename T>
-    struct ByteOffset
-    {
       static constexpr oidn_constant uint32_t cByteStride = sizeof(T);
       uint32_t wByteStride;
       uint32_t hByteStride;
 
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
       ByteOffset() = default;
 
       oidn_host_device_inline ByteOffset(int C, int H, int W)
@@ -98,18 +131,22 @@ OIDN_NAMESPACE_BEGIN
         wByteStride = uint32_t(C) * cByteStride;
         hByteStride = uint32_t(W) * wByteStride;
       }
+#endif
 
-      oidn_host_device_inline uint32_t operator ()(int c, int h, int w) const
+      oidn_host_device_inline uint32_t operator ()(int c, int h, int w) oidn_const_func
       {
         return uint32_t(c) * cByteStride +
                uint32_t(h) * hByteStride +
                uint32_t(w) * wByteStride;
       }
-    };
-  };
+  }
+  TENSOR_LAYOUT_TRAITS_BYTE_OFFSET_DECL_END();
 
   template<typename T, int B>
   struct TensorByteOffsetChwBc
+#if defined(OIDN_COMPILE_VULKAN_DEVICE)
+    : ITensorByteOffset3D<T>
+#endif
   {
     static constexpr oidn_constant int blockC = B; // block channels
 
@@ -118,6 +155,7 @@ OIDN_NAMESPACE_BEGIN
     uint32_t hByteStride;
     uint32_t CByteStride;
 
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
     TensorByteOffsetChwBc() = default;
 
     oidn_host_device_inline TensorByteOffsetChwBc(int C, int H, int W)
@@ -125,8 +163,9 @@ OIDN_NAMESPACE_BEGIN
       hByteStride = uint32_t(W) * wByteStride;
       CByteStride = uint32_t(H) * hByteStride;
     }
+#endif
 
-    oidn_host_device_inline uint32_t operator ()(int c, int h, int w) const
+    oidn_host_device_inline uint32_t operator ()(int c, int h, int w) oidn_const_func
     {
       return uint32_t(c/B) * CByteStride +
              uint32_t(h)   * hByteStride +
@@ -134,6 +173,8 @@ OIDN_NAMESPACE_BEGIN
              uint32_t(c%B) * cByteStride;
     }
   };
+
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
 
   template<>
   struct TensorLayoutTraits<TensorLayout::Chw8c>
@@ -156,17 +197,27 @@ OIDN_NAMESPACE_BEGIN
     using ByteOffset = TensorByteOffsetChwBc<T, 32>;
   };
 
-  template<>
-  struct TensorLayoutTraits<TensorLayout::oihw>
+#else
+
+  template<typename T>
+  typealias TensorByteOffset_Chw8c = TensorByteOffsetChwBc<T, 8>;
+
+  template<typename T>
+  typealias TensorByteOffset_Chw16c = TensorByteOffsetChwBc<T, 16>;
+
+  template<typename T>
+  typealias TensorByteOffset_Chw32c = TensorByteOffsetChwBc<T, 32>;
+
+#endif
+
+  TENSOR_LAYOUT_TRAITS_BYTE_OFFSET_DECL_BEGIN(4D, oihw)
   {
-    template<typename T>
-    struct ByteOffset
-    {
       static constexpr oidn_constant uint32_t wByteStride = sizeof(T);
       uint32_t hByteStride;
       uint32_t iByteStride;
       uint32_t oByteStride;
 
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
       ByteOffset() = default;
 
       oidn_host_device_inline ByteOffset(int O, int I, int H, int W)
@@ -175,19 +226,23 @@ OIDN_NAMESPACE_BEGIN
         iByteStride = uint32_t(H) * hByteStride;
         oByteStride = uint32_t(I) * iByteStride;
       }
+#endif
 
-      oidn_host_device_inline uint32_t operator ()(int o, int i, int h, int w) const
+      oidn_host_device_inline uint32_t operator ()(int o, int i, int h, int w) oidn_const_func
       {
         return uint32_t(o) * oByteStride +
                uint32_t(i) * iByteStride +
                uint32_t(h) * hByteStride +
                uint32_t(w) * wByteStride;
       }
-    };
-  };
+  }
+  TENSOR_LAYOUT_TRAITS_BYTE_OFFSET_DECL_END();
 
   template<typename T, int B>
   struct TensorByteOffsetOIhwBiBo
+#if defined(OIDN_COMPILE_VULKAN_DEVICE)
+    : ITensorByteOffset4D<T>
+#endif
   {
     static constexpr oidn_constant int blockC = B; // block channels
 
@@ -198,6 +253,7 @@ OIDN_NAMESPACE_BEGIN
     uint32_t IByteStride;
     uint32_t OByteStride;
 
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
     TensorByteOffsetOIhwBiBo() = default;
 
     oidn_host_device_inline TensorByteOffsetOIhwBiBo(int O, int I, int H, int W)
@@ -206,8 +262,9 @@ OIDN_NAMESPACE_BEGIN
       IByteStride = uint32_t(H)     * hByteStride;
       OByteStride = uint32_t(I / B) * IByteStride;
     }
+#endif
 
-    oidn_host_device_inline uint32_t operator ()(int o, int i, int h, int w) const
+    oidn_host_device_inline uint32_t operator ()(int o, int i, int h, int w) oidn_const_func
     {
       return uint32_t(o / B) * OByteStride  +
              uint32_t(i / B) * IByteStride  +
@@ -217,6 +274,8 @@ OIDN_NAMESPACE_BEGIN
              uint32_t(o % B) * BoByteStride;
     }
   };
+
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
 
   template<>
   struct TensorLayoutTraits<TensorLayout::OIhw8i8o>
@@ -232,8 +291,21 @@ OIDN_NAMESPACE_BEGIN
     using ByteOffset = TensorByteOffsetOIhwBiBo<T, 16>;
   };
 
+#else
+
+  template<typename T>
+  typealias TensorByteOffset_OIhw8i8o= TensorByteOffsetOIhwBiBo<T, 8>;
+
+  template<typename T>
+  typealias TensorByteOffset_OIhw16i16o= TensorByteOffsetOIhwBiBo<T, 16>;
+
+#endif
+
   template<typename T, int B>
   struct TensorByteOffsetIOhwBiBo
+#if defined(OIDN_COMPILE_VULKAN_DEVICE)
+    : ITensorByteOffset4D<T>
+#endif
   {
     static constexpr oidn_constant int blockC = B; // block channels
 
@@ -244,6 +316,7 @@ OIDN_NAMESPACE_BEGIN
     uint32_t OByteStride;
     uint32_t IByteStride;
 
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
     TensorByteOffsetIOhwBiBo() = default;
 
     oidn_host_device_inline TensorByteOffsetIOhwBiBo(int O, int I, int H, int W)
@@ -252,8 +325,9 @@ OIDN_NAMESPACE_BEGIN
       OByteStride = uint32_t(H)     * hByteStride;
       IByteStride = uint32_t(O / B) * OByteStride;
     }
+#endif
 
-    oidn_host_device_inline uint32_t operator ()(int o, int i, int h, int w) const
+    oidn_host_device_inline uint32_t operator ()(int o, int i, int h, int w) oidn_const_func
     {
       return uint32_t(i / B) * IByteStride  +
              uint32_t(o / B) * OByteStride  +
@@ -263,6 +337,8 @@ OIDN_NAMESPACE_BEGIN
              uint32_t(o % B) * BoByteStride;
     }
   };
+
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
 
   template<>
   struct TensorLayoutTraits<TensorLayout::IOhw8i8o>
@@ -277,6 +353,18 @@ OIDN_NAMESPACE_BEGIN
     template<typename T>
     using ByteOffset = TensorByteOffsetIOhwBiBo<T, 16>;
   };
+
+#else
+
+  template<typename T>
+  typealias TensorByteOffset_IOhw8i8o = TensorByteOffsetIOhwBiBo<T, 8>;
+
+  template<typename T>
+  typealias TensorByteOffset_IOhw16i16o = TensorByteOffsetIOhwBiBo<T, 16>;
+
+#endif
+
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
 
   template<typename T, int P, int Q, int R, int S>
   struct TensorByteOffsetOIhwPoQiRoSi
@@ -338,17 +426,16 @@ OIDN_NAMESPACE_BEGIN
     using ByteOffset = TensorByteOffsetOIhwPoQiRoSi<T, 2, 16, 16, 2>;
   };
 
-  template<>
-  struct TensorLayoutTraits<TensorLayout::ohwi>
+#endif
+
+  TENSOR_LAYOUT_TRAITS_BYTE_OFFSET_DECL_BEGIN(4D, ohwi)
   {
-    template<typename T>
-    struct ByteOffset
-    {
       static constexpr oidn_constant uint32_t iByteStride = sizeof(T);
       uint32_t wByteStride;
       uint32_t hByteStride;
       uint32_t oByteStride;
 
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
       ByteOffset() = default;
 
       oidn_host_device_inline ByteOffset(int O, int I, int H, int W)
@@ -357,23 +444,31 @@ OIDN_NAMESPACE_BEGIN
         hByteStride = uint32_t(W) * wByteStride;
         oByteStride = uint32_t(H) * hByteStride;
       }
+#endif
 
-      oidn_host_device_inline uint32_t operator ()(int o, int i, int h, int w) const
+      oidn_host_device_inline uint32_t operator ()(int o, int i, int h, int w) oidn_const_func
       {
         return uint32_t(o) * oByteStride +
                uint32_t(i) * iByteStride +
                uint32_t(h) * hByteStride +
                uint32_t(w) * wByteStride;
       }
-    };
-  };
+  }
+  TENSOR_LAYOUT_TRAITS_BYTE_OFFSET_DECL_END();
+
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
+  template<typename T, TensorLayout layout>
+  using TensorByteOffset1D = typename TensorLayoutTraits<layout>::template ByteOffset<T>;
 
   template<typename T, TensorLayout layout>
-  using TensorByteOffset = typename TensorLayoutTraits<layout>::template ByteOffset<T>;
+  using TensorByteOffset3D = typename TensorLayoutTraits<layout>::template ByteOffset<T>;
 
+  template<typename T, TensorLayout layout>
+  using TensorByteOffset4D = typename TensorLayoutTraits<layout>::template ByteOffset<T>;
+#endif
   // -----------------------------------------------------------------------------------------------
 
-#if !defined(OIDN_COMPILE_METAL_DEVICE)
+#if !defined(OIDN_COMPILE_METAL_DEVICE) && !defined(OIDN_COMPILE_VULKAN_DEVICE)
   struct TensorLayoutInfo
   {
     int rank;

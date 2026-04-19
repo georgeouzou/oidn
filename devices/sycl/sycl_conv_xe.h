@@ -31,7 +31,7 @@ namespace xe2 {
     static constexpr int dpasDepth  = 8; // DPAS depth
     static constexpr int dpasRepeat = 8; // DPAS repeat count
 
-    static constexpr int blockC = TensorByteOffset<SrcDstT, srcDstLayout>::blockC; // channel block size
+    static constexpr int blockC = TensorByteOffset3D<SrcDstT, srcDstLayout>::blockC; // channel block size
 
   #if defined(OIDN_ARCH_XEHPG)
     using MatmulT = SrcDstT;
