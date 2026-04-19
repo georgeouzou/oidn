@@ -34,21 +34,21 @@ OIDN_NAMESPACE_BEGIN
       {
         const oidn_global float* pixel = static_cast<const oidn_global float*>(pixelPtr);
         if (C == 3)
-          return vec3<T>(pixel[0], pixel[1], pixel[2]);
+          return vec3<T>(T(pixel[0]), T(pixel[1]), T(pixel[2]));
         else if (C == 2)
-          return vec3<T>(pixel[0], pixel[1], pixel[1]);
+          return vec3<T>(T(pixel[0]), T(pixel[1]), T(pixel[1]));
         else // if (C == 1)
-          return vec3<T>(pixel[0], pixel[0], pixel[0]);
+          return vec3<T>(T(pixel[0]), T(pixel[0]), T(pixel[0]));
       }
       else // if (dataType == DataType::Float16)
       {
         const oidn_global half* pixel = static_cast<const oidn_global half*>(pixelPtr);
         if (C == 3)
-          return vec3<T>(pixel[0], pixel[1], pixel[2]);
+          return vec3<T>(T(pixel[0]), T(pixel[1]), T(pixel[2]));
         else if (C == 2)
-          return vec3<T>(pixel[0], pixel[1], pixel[1]);
+          return vec3<T>(T(pixel[0]), T(pixel[1]), T(pixel[1]));
         else // if (C == 1)
-          return vec3<T>(pixel[0], pixel[0], pixel[0]);
+          return vec3<T>(T(pixel[0]), T(pixel[0]), T(pixel[0]));
       }
     }
 
@@ -61,34 +61,34 @@ OIDN_NAMESPACE_BEGIN
         oidn_global float* pixel = static_cast<oidn_global float*>(pixelPtr);
         if (C == 3)
         {
-          pixel[0] = value.x;
-          pixel[1] = value.y;
-          pixel[2] = value.z;
+          pixel[0] = float(value.x);
+          pixel[1] = float(value.y);
+          pixel[2] = float(value.z);
         }
         else if (C == 2)
         {
-          pixel[0] = value.x;
-          pixel[1] = value.y;
+          pixel[0] = float(value.x);
+          pixel[1] = float(value.y);
         }
         else // if (C == 1)
-          pixel[0] = value.x;
+          pixel[0] = float(value.x);
       }
       else // if (dataType == DataType::Float16)
       {
         oidn_global half* pixel = static_cast<oidn_global half*>(pixelPtr);
         if (C == 3)
         {
-          pixel[0] = value.x;
-          pixel[1] = value.y;
-          pixel[2] = value.z;
+          pixel[0] = half(value.x);
+          pixel[1] = half(value.y);
+          pixel[2] = half(value.z);
         }
         else if (C == 2)
         {
-          pixel[0] = value.x;
-          pixel[1] = value.y;
+          pixel[0] = half(value.x);
+          pixel[1] = half(value.y);
         }
         else // if (C == 1)
-          pixel[0] = value.x;
+          pixel[0] = half(value.x);
       }
     }
   };
