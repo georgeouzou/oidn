@@ -13,6 +13,37 @@ namespace ispc
 
 OIDN_NAMESPACE_BEGIN
 
+  template<typename T, typename U>
+  oidn_host_device_inline T cast_ptr(U ptr)
+  {
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
+    return static_cast<T>(ptr);
+#else
+    return reinterpret<T>(ptr);
+#endif
+  }
+
+#if defined(OIDN_COMPILE_VULKAN_HOST)
+  static_assert(sizeof(size_t) == 8, "size_t in vulkan shader code is 64-bit");
+#endif
+
+#if defined(OIDN_COMPILE_VULKAN_DEVICE)
+  typealias char = uint8_t;
+  typealias size_t = uint64_t;
+
+  // cast from __BuiltinFloatingPointType to float
+  extension float
+  {
+   __init(__BuiltinFloatingPointType v) { this = __realCast<float>(v); }
+  }
+
+  // cast from __BuiltinFloatingPointType to half
+  extension half
+  {
+   __init(__BuiltinFloatingPointType v) { this = __realCast<half>(v); }
+  }
+#endif
+
   struct ImageAccessor
   {
     oidn_global char* ptr;
@@ -21,18 +52,19 @@ OIDN_NAMESPACE_BEGIN
     DataType dataType;  // data type
     int C, H, W;        // channels (1-3), height, width
 
-    oidn_host_device_inline size_t getByteOffset(int h, int w) const
+    oidn_host_device_inline size_t getByteOffset(int h, int w) oidn_const_func
     {
       return size_t(h) * hByteStride + size_t(w) * wByteStride;
     }
 
     template<typename T = float>
-    oidn_host_device_inline vec3<T> get3(int h, int w) const
+    oidn_host_device_inline vec3<T> get3(int h, int w) oidn_const_func
+      WHERE(T, __BuiltinFloatingPointType)
     {
-      const oidn_global void* pixelPtr = ptr + getByteOffset(h, w);
+      oidn_global_readonly_ptr(void) pixelPtr = cast_ptr<oidn_global_readonly_ptr(void)>(ptr + getByteOffset(h, w));
       if (dataType == DataType::Float32)
       {
-        const oidn_global float* pixel = static_cast<const oidn_global float*>(pixelPtr);
+        oidn_global_readonly_ptr(float) pixel = cast_ptr<oidn_global_readonly_ptr(float)>(pixelPtr);
         if (C == 3)
           return vec3<T>(T(pixel[0]), T(pixel[1]), T(pixel[2]));
         else if (C == 2)
@@ -42,7 +74,7 @@ OIDN_NAMESPACE_BEGIN
       }
       else // if (dataType == DataType::Float16)
       {
-        const oidn_global half* pixel = static_cast<const oidn_global half*>(pixelPtr);
+        oidn_global_readonly_ptr(half) pixel = cast_ptr<oidn_global_readonly_ptr(half)>(pixelPtr);
         if (C == 3)
           return vec3<T>(T(pixel[0]), T(pixel[1]), T(pixel[2]));
         else if (C == 2)
@@ -53,12 +85,13 @@ OIDN_NAMESPACE_BEGIN
     }
 
     template<typename T>
-    oidn_host_device_inline void set3(int h, int w, vec3<T> value) const
+    oidn_host_device_inline void set3(int h, int w, vec3<T> value) oidn_const_func
+      WHERE(T, __BuiltinFloatingPointType)
     {
-      oidn_global void* pixelPtr = ptr + getByteOffset(h, w);
+      oidn_global void* pixelPtr = cast_ptr<oidn_global void*>(ptr + getByteOffset(h, w));
       if (dataType == DataType::Float32)
       {
-        oidn_global float* pixel = static_cast<oidn_global float*>(pixelPtr);
+        oidn_global float* pixel = cast_ptr<oidn_global float*>(pixelPtr);
         if (C == 3)
         {
           pixel[0] = float(value.x);
@@ -75,7 +108,7 @@ OIDN_NAMESPACE_BEGIN
       }
       else // if (dataType == DataType::Float16)
       {
-        oidn_global half* pixel = static_cast<oidn_global half*>(pixelPtr);
+        oidn_global half* pixel = cast_ptr<oidn_global half*>(pixelPtr);
         if (C == 3)
         {
           pixel[0] = half(value.x);
