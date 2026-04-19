@@ -76,6 +76,12 @@
   #define template __generic
 #endif
 
+#if defined(OIDN_COMPILE_VULKAN_DEVICE)
+  #define oidn_const_func
+#else
+  #define oidn_const_func const
+#endif
+
 #if defined(OIDN_COMPILE_CUDA) || defined(OIDN_COMPILE_HIP)
   #define oidn_device __device__
   #define oidn_device_inline __device__ oidn_inline
@@ -110,6 +116,12 @@
     #define oidn_local
     #define oidn_private
   #endif
+#endif
+
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
+  #define oidn_global_readonly_ptr(T) const oidn_global T*
+#else
+  #define oidn_global_readonly_ptr(T) Ptr<T, Access.Read, AddressSpace.Device>
 #endif
 
 // Helper string macros

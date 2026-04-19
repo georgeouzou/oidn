@@ -20,7 +20,7 @@ OIDN_NAMESPACE_BEGIN
     static constexpr oidn_constant float yMax = 65504.f; // maximum HDR value
 
     Type type;
-    const oidn_global float* inputScalePtr = nullptr;
+    oidn_global_readonly_ptr(float) inputScalePtr = nullptr;
     float inputScale   = 1.f;
     float outputScale  = 1.f;
     float normScale    = 1.f;
@@ -87,7 +87,7 @@ OIDN_NAMESPACE_BEGIN
       }
     };
 
-  #if !defined(OIDN_COMPILE_METAL_DEVICE)
+  #if !defined(OIDN_COMPILE_METAL_DEVICE) && !defined(OIDN_COMPILE_VULKAN_DEVICE)
     explicit TransferFunction(Type type = Type::Linear);
 
     Type getType() const { return type; }
@@ -107,12 +107,12 @@ OIDN_NAMESPACE_BEGIN
     }
   #endif
 
-    oidn_host_device_inline float getInputScale() const
+    oidn_host_device_inline float getInputScale() oidn_const_func
     {
       return inputScalePtr ? *inputScalePtr : inputScale;
     }
 
-    oidn_host_device_inline float getOutputScale() const
+    oidn_host_device_inline float getOutputScale() oidn_const_func
     {
       if (inputScalePtr)
       {
@@ -122,7 +122,7 @@ OIDN_NAMESPACE_BEGIN
       return outputScale;
     }
 
-    oidn_host_device_inline vec3f forward(vec3f y) const
+    oidn_host_device_inline vec3f forward(vec3f y) oidn_const_func
     {
       switch (type)
       {
@@ -143,7 +143,7 @@ OIDN_NAMESPACE_BEGIN
       }
     }
 
-    oidn_host_device_inline vec3f inverse(vec3f x) const
+    oidn_host_device_inline vec3f inverse(vec3f x) oidn_const_func
     {
       switch (type)
       {
