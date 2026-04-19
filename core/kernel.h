@@ -22,17 +22,21 @@ OIDN_NAMESPACE_BEGIN
   template<typename T>
   using LocalPtr  = sycl::multi_ptr<T, sycl::access::address_space::local_space>;
 
-#else
+#elif !defined(OIDN_COMPILE_VULKAN_DEVICE)
+
   template<typename T>
   using GlobalPtr = oidn_global T*;
 
   template<typename T>
   using LocalPtr  = oidn_local T*;
+
 #endif
 
   // -----------------------------------------------------------------------------------------------
   // WorkDim
   // -----------------------------------------------------------------------------------------------
+
+#if !defined(OIDN_COMPILE_VULKAN_DEVICE)
 
   template<int N>
   class WorkDim;
@@ -121,6 +125,8 @@ OIDN_NAMESPACE_BEGIN
   oidn_inline WorkDim<3> ceil_div(WorkDim<3> a, WorkDim<3> b) {
     return {ceil_div(a[0], b[0]), ceil_div(a[1], b[1]), ceil_div(a[2], b[2])};
   }
+
+#endif
 
   // -----------------------------------------------------------------------------------------------
   // WorkItem, WorkGroupItem
@@ -389,6 +395,86 @@ OIDN_NAMESPACE_BEGIN
 
   private:
     uint2 globalID, globalSize, localID, localSize, groupID, numGroups; // reverse indexing!
+  };
+
+#elif defined(OIDN_COMPILE_VULKAN_DEVICE)
+
+  // Vulkan & Slang expose native axes as x=0, y=1, z=2 (same as CUDA/HIP/Metal)
+  // which is reverse of OIDN logical indexing (which follows c++ and sycl)
+  // OIDN logical dim i maps to native axis N-1-i
+
+  template<int N>
+  struct WorkItem
+  {
+    vector<uint, N> globalID;
+
+    __init(vector<uint, N> _globalID)
+    {
+      globalID = _globalID;
+    }
+
+    template<int i> oidn_device_inline int getGlobalID()   { return globalID[N-1-i]; }
+    template<int i> oidn_device_inline int getGlobalSize() { return WorkgroupSize()[N-1-i] * WorkgroupCount()[N-1-i]; }
+
+    oidn_device_inline int getGlobalLinearID()
+    {
+      int id = 0;
+      [ForceUnroll]
+      for (int i = 0; i < N; ++i)
+        id = id * (WorkgroupSize()[N-1-i] * WorkgroupCount()[N-1-i]) + globalID[N-1-i];
+      return id;
+    }
+  };
+
+  template<int N>
+  struct WorkGroupItem
+  {
+    vector<uint, N> globalID;
+    vector<uint, N> localID;
+    vector<uint, N> groupID;
+    uint localIndex;
+
+    __init(vector<uint, N> _globalID, vector<uint, N> _localID, vector<uint, N> _groupID, uint _localIndex)
+    {
+      globalID = _globalID;
+      localID = _localID;
+      groupID = _groupID;
+      localIndex = _localIndex;
+    }
+
+    template<int i> oidn_device_inline int getGlobalID()   { return globalID[N-1-i]; }
+    template<int i> oidn_device_inline int getGlobalSize() { return WorkgroupSize()[N-1-i] * WorkgroupCount()[N-1-i]; }
+    template<int i> oidn_device_inline int getLocalID()    { return localID[N-1-i]; }
+    template<int i> oidn_device_inline int getLocalSize()  { return WorkgroupSize()[N-1-i]; }
+    template<int i> oidn_device_inline int getGroupID()    { return groupID[N-1-i]; }
+    template<int i> oidn_device_inline int getNumGroups()  { return WorkgroupCount()[N-1-i]; }
+
+    oidn_device_inline int getGlobalLinearID()
+    {
+      int id = 0;
+      [ForceUnroll]
+      for (int i = 0; i < N; ++i)
+        id = id * (WorkgroupSize()[N-1-i] * WorkgroupCount()[N-1-i]) + globalID[N-1-i];
+      return id;
+    }
+
+    oidn_device_inline int getLocalLinearID() { return localIndex; }
+
+    oidn_device_inline int getGroupLinearID()
+    {
+      int id = 0;
+      [ForceUnroll]
+      for (int i = 0; i < N; ++i)
+        id = id * WorkgroupCount()[N-1-i] + groupID[N-1-i];
+      return id;
+    }
+
+    oidn_device_inline void groupBarrier()
+    {
+      GroupMemoryBarrierWithGroupSync();
+    }
+
+    // TODO subgroups
   };
 
 #else
