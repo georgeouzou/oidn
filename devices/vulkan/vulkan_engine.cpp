@@ -15,6 +15,8 @@
 #include "devices/gpu/gpu_pool.h"
 #include "devices/gpu/gpu_upsample.h"
 
+#include <cstring>
+
 OIDN_NAMESPACE_BEGIN
 
   VulkanEngine::VulkanEngine(VulkanDevice* device, const VulkanQueue& queue)
@@ -159,6 +161,27 @@ OIDN_NAMESPACE_BEGIN
   {
     VkDevice device = getVkDevice();
     return makeRef<VulkanComputePipeline>(device, spirvData, spirvSize, VulkanSize3D{}, 8);
+  }
+
+  void VulkanEngine::submitKernelImpl(VulkanSize3D numGroups,
+                                      const void* kernelData,
+                                      size_t kernelSize,
+                                      const Ref<VulkanComputePipeline>& pipeline)
+  {
+    assert(kernelData != nullptr || kernelSize == 0);
+    assert(kernelSize == pipeline->getPushConstantSize());
+    assert(kernelSize % 4 == 0);
+    assert(kernelSize <= 256);
+
+    VkCommandBuffer cmdBuf = beginSingleTimeCommands();
+
+    vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
+    vkCmdPushConstants(cmdBuf, *pipeline, VK_SHADER_STAGE_COMPUTE_BIT, 0,
+                       static_cast<uint32_t>(kernelSize), kernelData);
+
+    vkCmdDispatch(cmdBuf, numGroups.x, numGroups.y, numGroups.z);
+
+    endSingleTimeCommands(cmdBuf);
   }
 
 OIDN_NAMESPACE_END

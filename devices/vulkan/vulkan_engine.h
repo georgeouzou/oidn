@@ -54,7 +54,21 @@ OIDN_NAMESPACE_BEGIN
 
     Ref<VulkanComputePipeline> newComputePipeline(const uint32_t* spirvData, uint32_t spirvSize);
 
+    // Enqueues a work-group kernel
+    template<int N, typename Kernel>
+    oidn_inline void submitKernel(WorkDim<N> numGroups,
+                                  const Kernel& kernel,
+                                  const Ref<VulkanComputePipeline>& pipeline)
+    {
+      submitKernelImpl(numGroups, &kernel, sizeof(kernel), pipeline);
+    }
+
   private:
+    void submitKernelImpl(VulkanSize3D numGroups,
+                          const void* kernelData,
+                          size_t kernelSize,
+                          const Ref<VulkanComputePipeline>& pipeline);
+
     VulkanDevice* device = nullptr;
     VkCommandPool commandPool = VK_NULL_HANDLE;
     VkDeviceSize maxBufferSize = 0;
