@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "common/platform.h"
 #include "core/ref.h"
 #include <vulkan/vulkan.h>
 
@@ -15,7 +16,10 @@ OIDN_NAMESPACE_BEGIN
   public:
     static constexpr uint32_t pushConstantSize = 8; // just an address for now
 
-    explicit VulkanComputePipeline(VkDevice device, const uint32_t *spirvData, uint32_t spirvSize);
+    explicit VulkanComputePipeline(VkDevice device,
+                                   const uint32_t* spirvData,
+                                   uint32_t spirvSize,
+                                   VulkanSize3D localSize);
     ~VulkanComputePipeline();
 
     operator VkPipeline() const { return pipeline; }
