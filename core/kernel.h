@@ -56,6 +56,8 @@ OIDN_NAMESPACE_BEGIN
     oidn_inline operator dim3() const { return dim3(dim[0]); }
   #elif defined(OIDN_COMPILE_METAL_HOST)
     oidn_inline operator MTLSize() const { return MTLSizeMake(dim[0], 1, 1); }
+  #elif defined(OIDN_COMPILE_VULKAN_HOST)
+    oidn_inline operator VulkanSize3D() const { return {uint32_t(dim[0]), 1, 1}; }
   #endif
 
     oidn_inline int getLinearSize() const { return dim[0]; }
@@ -78,6 +80,8 @@ OIDN_NAMESPACE_BEGIN
     oidn_inline operator dim3() const { return dim3(dim[1], dim[0]); }
   #elif defined(OIDN_COMPILE_METAL_HOST)
     oidn_inline operator MTLSize() const { return MTLSizeMake(dim[1], dim[0], 1); }
+  #elif defined(OIDN_COMPILE_VULKAN_HOST)
+    oidn_inline operator VulkanSize3D() const { return {uint32_t(dim[1]), uint32_t(dim[0]), 1}; }
   #endif
 
     oidn_inline int getLinearSize() const { return dim[0] * dim[1]; }
@@ -100,6 +104,8 @@ OIDN_NAMESPACE_BEGIN
     oidn_inline operator dim3() const { return dim3(dim[2], dim[1], dim[0]); }
   #elif defined(OIDN_COMPILE_METAL_HOST)
     oidn_inline operator MTLSize() const { return MTLSizeMake(dim[2], dim[1], dim[0]); }
+  #elif defined(OIDN_COMPILE_VULKAN_HOST)
+    oidn_inline operator VulkanSize3D() const { return {uint32_t(dim[2]), uint32_t(dim[1]), uint32_t(dim[0])}; }
   #endif
 
     oidn_inline int getLinearSize() const { return dim[0] * dim[1] * dim[2]; }

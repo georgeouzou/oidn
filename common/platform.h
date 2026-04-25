@@ -393,5 +393,13 @@ OIDN_NAMESPACE_BEGIN
 
 #endif // !defined(OIDN_COMPILE_METAL_DEVICE) && !defined(OIDN_COMPILE_VULKAN_DEVICE)
 
+#if defined(OIDN_COMPILE_VULKAN_HOST)
+  // helper dim3-like structure
+  struct VulkanSize3D
+  {
+    uint32_t x, y, z;
+  };
+#endif
+
 OIDN_NAMESPACE_END
 
