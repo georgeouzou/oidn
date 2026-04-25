@@ -138,6 +138,9 @@
 #if defined(OIDN_COMPILE_METAL_DEVICE)
   #include <metal_stdlib>
 #elif defined(OIDN_COMPILE_VULKAN_DEVICE)
+#ifndef FLT_MAX
+  static constexpr float FLT_MAX = float::maxValue;
+#endif
 #else
   #if defined(_WIN32)
     #if !defined(WIN32_LEAN_AND_MEAN)

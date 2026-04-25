@@ -1,36 +1,66 @@
 // Copyright 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-struct InputProcessParams
+#define OIDN_COMPILE_VULKAN_DEVICE 1
+
+#include "core/kernel.h"
+#include "core/color.h"
+#include "core/image_accessor.h"
+#include "core/tensor_accessor.h"
+#include "devices/gpu/gpu_input_process.h"
+
+namespace oidn
 {
-  // TODO
+  template<typename T, TensorLayout layout>
+  typealias TensorByteOffset1D = TensorByteOffset_x<T>;
+
+  template<typename T, TensorLayout layout>
+  typealias TensorByteOffset3D = TensorByteOffset_hwc<T>;
+
+  template<typename T, TensorLayout layout>
+  typealias TensorByteOffset4D = TensorByteOffset_oihw<T>;
+}
+
+struct SystemValues
+{
+  uint2 globalID : SV_DispatchThreadID;
+  uint2 localID : SV_GroupThreadID;
+  uint2 groupID : SV_GroupID;
+  uint localIndex : SV_GroupIndex;
 };
 
-struct PushConstants
-{
-  InputProcessParams *params;
-};
+[vk::constant_id(0)]
+const uint localSizeX = 1;
 
-[[vk::push_constant]]
-PushConstants pushConstants;
+[vk::constant_id(1)]
+const uint localSizeY = 1;
+
+[vk::constant_id(2)]
+const uint localSizeZ = 1;
 
 [shader("compute")]
-[numthreads(16, 16, 1)]
-void inputProcess1(uint3 dispatchThreadID : SV_DispatchThreadID)
+[numthreads(localSizeX, localSizeY, localSizeZ)]
+void inputProcess3(SystemValues sv,
+                   uniform oidn::GPUInputProcessKernel<half, oidn::TensorLayout::hwc, 3> params)
 {
-  // TODO
+  oidn::WorkGroupItem<2> it = { sv.globalID, sv.localID, sv.groupID, sv.localIndex };
+  params(it);
 }
 
 [shader("compute")]
-[numthreads(16, 16, 1)]
-void inputProcess2(uint3 dispatchThreadID : SV_DispatchThreadID)
+[numthreads(localSizeX, localSizeY, localSizeZ)]
+void inputProcess6(SystemValues sv,
+                   uniform oidn::GPUInputProcessKernel<half, oidn::TensorLayout::hwc, 6> params)
 {
-  // TODO
+  oidn::WorkGroupItem<2> it = { sv.globalID, sv.localID, sv.groupID, sv.localIndex };
+  params(it);
 }
 
 [shader("compute")]
-[numthreads(16, 16, 1)]
-void inputProcess3(uint3 dispatchThreadID : SV_DispatchThreadID)
+[numthreads(localSizeX, localSizeY, localSizeZ)]
+void inputProcess9(SystemValues sv,
+                   uniform oidn::GPUInputProcessKernel<half, oidn::TensorLayout::hwc, 9> params)
 {
-  // TODO
+  oidn::WorkGroupItem<2> it = { sv.globalID, sv.localID, sv.groupID, sv.localIndex };
+  params(it);
 }

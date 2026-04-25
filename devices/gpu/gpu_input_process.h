@@ -9,14 +9,23 @@
 #include "core/color.h"
 #include "core/tile.h"
 
-#if !defined(OIDN_COMPILE_METAL_DEVICE)
+#if !defined(OIDN_COMPILE_METAL_DEVICE) && !defined(OIDN_COMPILE_VULKAN_DEVICE)
   #include "core/input_process.h"
 #endif
 
 OIDN_NAMESPACE_BEGIN
 
+  // Bool type alias for host/device ABI compatibility with Vulkan
+  #if defined(OIDN_COMPILE_VULKAN_HOST)
+    using GPUInputProcessBool = uint32_t;
+  #elif defined(OIDN_COMPILE_VULKAN_DEVICE)
+    typealias GPUInputProcessBool = bool;
+  #else
+    using GPUInputProcessBool = bool;
+  #endif
+
   template<typename DstT, TensorLayout dstLayout, int dstPaddedC>
-  struct GPUInputProcessKernel
+  struct GPUInputProcessKernel WHERE(DstT, __BuiltinFloatingPointType)
   {
     // Source
     ImageAccessor input;  // color, albedo or normal
@@ -31,12 +40,12 @@ OIDN_NAMESPACE_BEGIN
 
     // Transfer function
     TransferFunction transferFunc;
-    bool hdr;
-    bool snorm; // signed normalized ([-1..1])
+    GPUInputProcessBool hdr;
+    GPUInputProcessBool snorm; // signed normalized ([-1..1])
 
-    oidn_device_inline vec3f getInput(int h, int w) const
+    oidn_device_inline vec3f getInput(int h, int w) oidn_const_func
     {
-      vec3f value = input.get3(h, w);
+      vec3f value = input.get3<float>(h, w);
 
       // Scale
       value = value * transferFunc.getInputScale();
@@ -56,9 +65,9 @@ OIDN_NAMESPACE_BEGIN
       return value;
     }
 
-    oidn_device_inline vec3f getAlbedo(int h, int w) const
+    oidn_device_inline vec3f getAlbedo(int h, int w) oidn_const_func
     {
-      vec3f value = albedo.get3(h, w);
+      vec3f value = albedo.get3<float>(h, w);
 
       // Sanitize
       value = math::clamp(math::nan_to_zero(value), 0.f, 1.f);
@@ -66,9 +75,9 @@ OIDN_NAMESPACE_BEGIN
       return value;
     }
 
-    oidn_device_inline vec3f getNormal(int h, int w) const
+    oidn_device_inline vec3f getNormal(int h, int w) oidn_const_func
     {
-      vec3f value = normal.get3(h, w);
+      vec3f value = normal.get3<float>(h, w);
 
       // Sanitize
       value = math::clamp(math::nan_to_zero(value), -1.f, 1.f);
@@ -79,7 +88,11 @@ OIDN_NAMESPACE_BEGIN
       return value;
     }
 
-    oidn_device_inline void operator ()(const oidn_private WorkGroupItem<2>& it) const
+  #if !defined(OIDN_COMPILE_VULKAN_DEVICE)
+    oidn_device_inline void operator ()(const oidn_private WorkGroupItem<2>& it) oidn_const_func
+  #else
+    oidn_device_inline void operator ()(WorkGroupItem<2> it)
+  #endif
     {
       const int hDst = it.getGlobalID<0>();
       const int wDst = it.getGlobalID<1>();
@@ -169,14 +182,21 @@ OIDN_NAMESPACE_BEGIN
       if (wDst < dst.W)
       {
         #pragma unroll
-        for (int c = 0; c < dstPaddedC; ++c)
+        for (int c = 0; c < dstPaddedC; ++c) {
+        #if defined(OIDN_COMPILE_VULKAN_DEVICE)
+          // copy accessor, so that we do not mutate self.
+	  var cdst = dst;
+          cdst[c, hDst, wDst] = DstT(values[c]);
+        #else
           dst(c, hDst, wDst) = values[c];
+        #endif
+	}
       }
     #endif
     }
   };
 
-#if !defined(OIDN_COMPILE_METAL_DEVICE)
+#if !defined(OIDN_COMPILE_METAL_DEVICE) && !defined(OIDN_COMPILE_VULKAN_DEVICE)
 
   template<typename EngineT, typename DstT, TensorLayout dstLayout, int tensorBlockC>
   class GPUInputProcess : public InputProcess
