@@ -52,7 +52,12 @@ OIDN_NAMESPACE_BEGIN
 
     VkDeviceSize getMaxBufferSize() const { return maxBufferSize; }
 
-    Ref<VulkanComputePipeline> newComputePipeline(const uint32_t* spirvData, uint32_t spirvSize);
+    template<typename PushData, int N>
+    Ref<VulkanComputePipeline> newComputePipeline(const std::string& kernelName,
+                                                  WorkDim<N> localSize)
+    {
+      return newComputePipelineImpl(kernelName, localSize, uint32_t(sizeof(PushData)));
+    }
 
     // Enqueues a work-group kernel
     template<int N, typename Kernel>
@@ -64,6 +69,10 @@ OIDN_NAMESPACE_BEGIN
     }
 
   private:
+    Ref<VulkanComputePipeline> newComputePipelineImpl(const std::string& kernelName,
+                                                      VulkanSize3D localSize,
+                                                      uint32_t pushConstantSize);
+
     void submitKernelImpl(VulkanSize3D numGroups,
                           const void* kernelData,
                           size_t kernelSize,

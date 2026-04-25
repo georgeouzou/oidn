@@ -220,6 +220,20 @@ OIDN_NAMESPACE_BEGIN
                                      "_" + toString(dstLayout) + "_" + toString(dst->getC());
       pipeline = engine->newPipeline(kernelName);
     }
+  #elif defined(OIDN_COMPILE_VULKAN_HOST)
+    void finalize() override
+    {
+      const int dstC = dst->getC();
+      const int dstPaddedC = dst->getPaddedC();
+      const int subgroupSize = engine->getSubgroupSize();
+      if (tensorBlockC > 1 && subgroupSize % dstPaddedC != 0)
+        throw std::logic_error("unsupported input processing destination channel count");
+      const WorkDim<2> groupSize{1, subgroupSize};
+      const std::string kernelName = "inputProcess_" + toString(DataTypeOf<DstT>::value) +
+                                     "_" + toString(dstLayout) + "_" + toString(dstC);
+      pipeline = engine->template newComputePipeline<GPUInputProcessKernel<DstT, dstLayout, tensorBlockC>>(
+        kernelName, groupSize);
+    }
   #endif
 
     void submitKernels(const Ref<CancellationToken>& ct) override
@@ -282,6 +296,8 @@ OIDN_NAMESPACE_BEGIN
                             normal ? normal->getBuffer() : nullptr,
                             dst->getBuffer(),
                             scratch});
+    #elif defined(OIDN_COMPILE_VULKAN_HOST)
+      engine->submitKernel(numGroups, kernel, pipeline);
     #else
       engine->submitKernel(numGroups, groupSize, kernel);
     #endif
@@ -292,6 +308,8 @@ OIDN_NAMESPACE_BEGIN
   #if defined(OIDN_COMPILE_METAL)
     Ref<MetalPipeline> pipeline;
     Ref<Buffer> scratch; // may contain autoexposure result, which must be tracked for Metal
+  #elif defined(OIDN_COMPILE_VULKAN_HOST)
+    Ref<VulkanComputePipeline> pipeline;
   #endif
   };
 

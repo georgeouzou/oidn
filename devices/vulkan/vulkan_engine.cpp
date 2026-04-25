@@ -14,8 +14,40 @@
 #include "devices/gpu/gpu_image_copy.h"
 #include "devices/gpu/gpu_pool.h"
 #include "devices/gpu/gpu_upsample.h"
+#include "devices/vulkan/inputProcess3.h"
+#include "devices/vulkan/inputProcess6.h"
+#include "devices/vulkan/inputProcess9.h"
 
 #include <cstring>
+
+namespace
+{
+  struct VulkanPipelineDesc
+  {
+    const char* name;
+    const uint32_t* spirvData;
+    uint32_t spirvSize;
+  };
+
+  const VulkanPipelineDesc vulkanPipelineRegistry[] =
+  {
+    {
+      "inputProcess_f16_hwc_3",
+      reinterpret_cast<const uint32_t*>(oidn::blobs::inputProcess3),
+      uint32_t(sizeof(oidn::blobs::inputProcess3)),
+    },
+    {
+      "inputProcess_f16_hwc_6",
+      reinterpret_cast<const uint32_t*>(oidn::blobs::inputProcess6),
+      uint32_t(sizeof(oidn::blobs::inputProcess6)),
+    },
+    {
+      "inputProcess_f16_hwc_9",
+      reinterpret_cast<const uint32_t*>(oidn::blobs::inputProcess9),
+      uint32_t(sizeof(oidn::blobs::inputProcess9)),
+    },
+  };
+}
 
 OIDN_NAMESPACE_BEGIN
 
@@ -100,7 +132,7 @@ OIDN_NAMESPACE_BEGIN
 
   Ref<InputProcess> VulkanEngine::newInputProcess(const InputProcessDesc& desc)
   {
-    return {};
+    return makeRef<GPUInputProcess<VulkanEngine, half, TensorLayout::hwc, 1>>(this, desc);
   }
 
   Ref<OutputProcess> VulkanEngine::newOutputProcess(const OutputProcessDesc& desc)
@@ -157,10 +189,22 @@ OIDN_NAMESPACE_BEGIN
     vkFreeCommandBuffers(getVkDevice(), commandPool, 1, &cmdBuf);
   }
 
-  Ref<VulkanComputePipeline> VulkanEngine::newComputePipeline(const uint32_t* spirvData, uint32_t spirvSize)
+  Ref<VulkanComputePipeline> VulkanEngine::newComputePipelineImpl(const std::string& kernelName,
+                                                                  VulkanSize3D localSize,
+                                                                  uint32_t pushConstantSize)
   {
-    VkDevice device = getVkDevice();
-    return makeRef<VulkanComputePipeline>(device, spirvData, spirvSize, VulkanSize3D{}, 8);
+    for (const auto& pipeline : vulkanPipelineRegistry)
+    {
+      if (kernelName == pipeline.name)
+      {
+        return makeRef<VulkanComputePipeline>(getVkDevice(),
+                                              pipeline.spirvData,
+                                              pipeline.spirvSize,
+                                              localSize,
+                                              pushConstantSize);
+      }
+    }
+    throw Exception(Error::InvalidArgument, "could not create Vulkan pipeline");
   }
 
   void VulkanEngine::submitKernelImpl(VulkanSize3D numGroups,
