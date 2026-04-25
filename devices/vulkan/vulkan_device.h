@@ -57,6 +57,7 @@ OIDN_NAMESPACE_BEGIN
     operator VkPhysicalDevice() const { return *physicalDevice; }
     VulkanQueue getQueue() const { return { queue, queueFamilyIndex }; }
     void getDeviceBufferMemoryRequirements(const VkDeviceBufferMemoryRequirementsKHR *pInfo, VkMemoryRequirements2 *pMemoryRequirements) const { vkGetDeviceBufferMemoryRequirements(device, pInfo, pMemoryRequirements); }
+    int getSubgroupSize() const { return subgroupSize; }
 
   private:
     void init() override;
@@ -65,6 +66,8 @@ OIDN_NAMESPACE_BEGIN
     VkDevice device = VK_NULL_HANDLE;
     VkQueue queue = VK_NULL_HANDLE;
     uint32_t queueFamilyIndex = 0;
+    int subgroupSize = 1;
+
     PFN_vkGetDeviceBufferMemoryRequirementsKHR vkGetDeviceBufferMemoryRequirements = nullptr;
   };
 

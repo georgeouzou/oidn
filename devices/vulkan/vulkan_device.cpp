@@ -286,12 +286,19 @@ OIDN_NAMESPACE_BEGIN
     if (!isSupported(*physicalDevice))
       throw Exception(Error::UnsupportedHardware, "unsupported Vulkan device");
 
+    VkPhysicalDeviceVulkan11Properties v11Props = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES, 0 };
+    VkPhysicalDeviceProperties2 props = {
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, 0 };
+    props.pNext = &v11Props;
+    vkGetPhysicalDeviceProperties2(*physicalDevice, &props);
+
+    subgroupSize = static_cast<int>(v11Props.subgroupSize);
+
     // Print device info
     if (isVerbose())
     {
-      VkPhysicalDeviceProperties props;
-      vkGetPhysicalDeviceProperties(*physicalDevice, &props);
-      std::cout << "  Device    : " << props.deviceName << std::endl;
+      std::cout << "  Device    : " << props.properties.deviceName << std::endl;
       std::cout << "    Type    : Vulkan" << std::endl;
     }
 

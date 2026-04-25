@@ -45,6 +45,8 @@ OIDN_NAMESPACE_BEGIN
 
     void wait() override;
 
+    int getSubgroupSize() const override { return device->getSubgroupSize(); }
+
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer cmdBuf);
 
