@@ -43,6 +43,8 @@ function(slang_target_add_sources target module_name)
       OUTPUT ${spirv_file}
       COMMAND ${SLANG_COMPILER}
         ${include_dirs}
+        -Wno-15205
+        -Wno-15601
         -target spirv
         -stage compute
         -entry ${entry}
