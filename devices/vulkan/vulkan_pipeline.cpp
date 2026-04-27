@@ -10,8 +10,9 @@ OIDN_NAMESPACE_BEGIN
   VulkanComputePipeline::VulkanComputePipeline(VkDevice device,
                                                const uint32_t* spirvData,
                                                uint32_t spirvSize,
-                                               VulkanSize3D localSize)
-    : device(device)
+                                               VulkanSize3D localSize,
+                                               uint32_t pushConstantSize)
+    : device(device), pushConstantSize(pushConstantSize)
   {
     VkPushConstantRange pushConstantRange = {};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;

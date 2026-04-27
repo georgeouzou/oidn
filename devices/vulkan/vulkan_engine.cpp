@@ -158,7 +158,7 @@ OIDN_NAMESPACE_BEGIN
   Ref<VulkanComputePipeline> VulkanEngine::newComputePipeline(const uint32_t* spirvData, uint32_t spirvSize)
   {
     VkDevice device = getVkDevice();
-    return makeRef<VulkanComputePipeline>(device, spirvData, spirvSize, VulkanSize3D{});
+    return makeRef<VulkanComputePipeline>(device, spirvData, spirvSize, VulkanSize3D{}, 8);
   }
 
 OIDN_NAMESPACE_END

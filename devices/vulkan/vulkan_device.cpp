@@ -191,6 +191,10 @@ OIDN_NAMESPACE_BEGIN
     if (major == 1 && minor < 2)
       return false;
 
+    // Require enough push-constant space to hold the biggest kernel params struct
+    if (props.limits.maxPushConstantsSize < 256)
+      return false;
+
     const VulkanQueueInfo queueInfo = queryQueueInfo(pDev);
     const bool hasGraphics = queueInfo.graphicsQueueFamily.has_value();
 

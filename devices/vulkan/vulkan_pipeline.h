@@ -14,16 +14,16 @@ OIDN_NAMESPACE_BEGIN
   class VulkanComputePipeline : public RefCount
   {
   public:
-    static constexpr uint32_t pushConstantSize = 8; // just an address for now
-
     explicit VulkanComputePipeline(VkDevice device,
                                    const uint32_t* spirvData,
                                    uint32_t spirvSize,
-                                   VulkanSize3D localSize);
+                                   VulkanSize3D localSize,
+                                   uint32_t pushConstantSize);
     ~VulkanComputePipeline();
 
     operator VkPipeline() const { return pipeline; }
     operator VkPipelineLayout() const { return pipelineLayout; }
+    uint32_t getPushConstantSize() const { return pushConstantSize; }
 
   private:
     void free();
@@ -32,6 +32,7 @@ OIDN_NAMESPACE_BEGIN
     VkDevice device = VK_NULL_HANDLE;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     VkPipeline pipeline = VK_NULL_HANDLE;
+    uint32_t pushConstantSize = 0;
   };
 
 OIDN_NAMESPACE_END
