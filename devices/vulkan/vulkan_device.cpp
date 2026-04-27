@@ -218,8 +218,9 @@ OIDN_NAMESPACE_BEGIN
     const bool hasBufferDeviceAddress = v12Features.bufferDeviceAddress == VK_TRUE && feats.features.shaderInt64;
     const bool hasStorage16 = v11Features.storageBuffer16BitAccess == VK_TRUE;
     const bool hasFloat16 = v12Features.shaderFloat16 == VK_TRUE;
+    const bool hasInt8 = v12Features.shaderInt8 == VK_TRUE && v12Features.storagePushConstant8 == VK_TRUE;
 
-    return hasGraphics && hasMaintenance4 && hasBufferDeviceAddress && hasStorage16 && hasFloat16;
+    return hasGraphics && hasMaintenance4 && hasBufferDeviceAddress && hasStorage16 && hasFloat16 && hasInt8;
   }
 
   VulkanDevice::VulkanDevice(const Ref<VulkanPhysicalDevice>& physicalDevice)
@@ -250,6 +251,8 @@ OIDN_NAMESPACE_BEGIN
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES, 0 };
     v12Features.bufferDeviceAddress = VK_TRUE;
     v12Features.shaderFloat16 = VK_TRUE;
+    v12Features.shaderInt8 = VK_TRUE;
+    v12Features.storagePushConstant8 = VK_TRUE;
 
     VkPhysicalDeviceMaintenance4FeaturesKHR maint4Features = {
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES_KHR, 0 };
