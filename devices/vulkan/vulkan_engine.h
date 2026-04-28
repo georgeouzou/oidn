@@ -59,7 +59,13 @@ OIDN_NAMESPACE_BEGIN
       return newComputePipelineImpl(kernelName, localSize, uint32_t(sizeof(PushData)));
     }
 
-    // Enqueues a work-group kernel
+    template<typename PushData, int N>
+    Ref<VulkanComputePipeline> newComputePipeline(const std::string& kernelName)
+    {
+      return newComputePipelineImpl(kernelName, suggestWorkGroupSize<N>(), uint32_t(sizeof(PushData)));
+    }
+
+    // Enqueues a kernel with explicit numGroups
     template<int N, typename Kernel>
     oidn_inline void submitKernel(WorkDim<N> numGroups,
                                   const Kernel& kernel,
@@ -68,7 +74,19 @@ OIDN_NAMESPACE_BEGIN
       submitKernelImpl(numGroups, &kernel, sizeof(kernel), pipeline);
     }
 
+    // Enqueues a kernel with implicit numGroups
+    template<int N, typename Kernel>
+    oidn_inline void submitKernelGlobal(WorkDim<N> globalSize,
+                                        const Kernel& kernel,
+                                        const Ref<VulkanComputePipeline>& pipeline)
+    {
+      const WorkDim<N> numGroups = ceil_div(globalSize, suggestWorkGroupSize<N>());
+      submitKernelImpl(numGroups, &kernel, sizeof(kernel), pipeline);
+    }
+
   private:
+    template<int N> WorkDim<N> suggestWorkGroupSize();
+
     Ref<VulkanComputePipeline> newComputePipelineImpl(const std::string& kernelName,
                                                       VulkanSize3D localSize,
                                                       uint32_t pushConstantSize);

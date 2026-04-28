@@ -189,6 +189,12 @@ OIDN_NAMESPACE_BEGIN
     vkFreeCommandBuffers(getVkDevice(), commandPool, 1, &cmdBuf);
   }
 
+  // keep it simple for now
+  // TODO: specialize per vendor values
+  template<> WorkDim<1> VulkanEngine::suggestWorkGroupSize<1>() { return 256; }
+  template<> WorkDim<2> VulkanEngine::suggestWorkGroupSize<2>() { return {16, 16}; }
+  template<> WorkDim<3> VulkanEngine::suggestWorkGroupSize<3>() { return {1, 16, 16}; }
+
   Ref<VulkanComputePipeline> VulkanEngine::newComputePipelineImpl(const std::string& kernelName,
                                                                   VulkanSize3D localSize,
                                                                   uint32_t pushConstantSize)
