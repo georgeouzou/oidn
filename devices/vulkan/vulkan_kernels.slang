@@ -9,6 +9,7 @@
 #include "core/tensor_accessor.h"
 #include "devices/gpu/gpu_input_process.h"
 #include "devices/gpu/gpu_output_process.h"
+#include "devices/gpu/gpu_image_copy.h"
 
 namespace oidn
 {
@@ -70,6 +71,15 @@ void inputProcess9(SystemValues sv,
 [numthreads(localSizeX, localSizeY, localSizeZ)]
 void outputProcess(SystemValues sv,
                    uniform oidn::GPUOutputProcessKernel<half, oidn::TensorLayout::hwc> params)
+{
+  oidn::WorkItem<2> it = { sv.globalID };
+  params(it);
+}
+
+[shader("compute")]
+[numthreads(localSizeX, localSizeY, localSizeZ)]
+void imageCopy(SystemValues sv,
+               uniform oidn::GPUImageCopyKernel params)
 {
   oidn::WorkItem<2> it = { sv.globalID };
   params(it);

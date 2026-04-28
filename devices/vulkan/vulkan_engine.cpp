@@ -18,6 +18,7 @@
 #include "devices/vulkan/inputProcess6.h"
 #include "devices/vulkan/inputProcess9.h"
 #include "devices/vulkan/outputProcess.h"
+#include "devices/vulkan/imageCopy.h"
 
 #include <cstring>
 
@@ -51,6 +52,11 @@ namespace
       "outputProcess_f16_hwc",
       reinterpret_cast<const uint32_t*>(oidn::blobs::outputProcess),
       uint32_t(sizeof(oidn::blobs::outputProcess)),
+    },
+    {
+      "imageCopy",
+      reinterpret_cast<const uint32_t*>(oidn::blobs::imageCopy),
+      uint32_t(sizeof(oidn::blobs::imageCopy)),
     },
   };
 }
@@ -148,7 +154,7 @@ OIDN_NAMESPACE_BEGIN
 
   Ref<ImageCopy> VulkanEngine::newImageCopy()
   {
-    return nullptr;
+    return makeRef<GPUImageCopy<VulkanEngine>>(this);
   }
 
   void VulkanEngine::submitHostFunc(std::function<void()>&& f, const Ref<CancellationToken>& ct)
