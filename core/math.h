@@ -42,7 +42,9 @@ namespace math {
   using metal::exp;
   using metal::exp2;
 #elif defined(OIDN_COMPILE_VULKAN_DEVICE)
-  // use the built-in math functions
+  // Use the shader builtin math functions
+  template<typename T> T min(T a, T b) where T:IFloat { return min(a, b); }
+  template<typename T> T max(T a, T b) where T:IFloat { return max(a, b); }
   template<typename T> T pow(T x, T y) where T:__BuiltinFloatingPointType { return pow(x, y); }
   template<typename T> T log(T x) where T:__BuiltinFloatingPointType { return log(x); }
   template<typename T> T exp(T x) where T:__BuiltinFloatingPointType { return exp(x); }

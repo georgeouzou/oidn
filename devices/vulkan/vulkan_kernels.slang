@@ -8,6 +8,7 @@
 #include "core/image_accessor.h"
 #include "core/tensor_accessor.h"
 #include "devices/gpu/gpu_input_process.h"
+#include "devices/gpu/gpu_output_process.h"
 
 namespace oidn
 {
@@ -62,5 +63,14 @@ void inputProcess9(SystemValues sv,
                    uniform oidn::GPUInputProcessKernel<half, oidn::TensorLayout::hwc, 9> params)
 {
   oidn::WorkGroupItem<2> it = { sv.globalID, sv.localID, sv.groupID, sv.localIndex };
+  params(it);
+}
+
+[shader("compute")]
+[numthreads(localSizeX, localSizeY, localSizeZ)]
+void outputProcess(SystemValues sv,
+                   uniform oidn::GPUOutputProcessKernel<half, oidn::TensorLayout::hwc> params)
+{
+  oidn::WorkItem<2> it = { sv.globalID };
   params(it);
 }

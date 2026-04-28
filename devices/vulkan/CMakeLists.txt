@@ -38,7 +38,7 @@ slang_target_add_sources(OpenImageDenoise_device_vulkan vulkan_kernels
     ${OIDN_ROOT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}
   ENTRY_POINTS
-    inputProcess3 inputProcess6 inputProcess9
+    inputProcess3 inputProcess6 inputProcess9 outputProcess
 )
 
 set_target_properties(OpenImageDenoise_device_vulkan PROPERTIES

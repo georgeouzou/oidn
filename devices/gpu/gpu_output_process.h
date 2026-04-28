@@ -9,14 +9,14 @@
 #include "core/color.h"
 #include "core/tile.h"
 
-#if !defined(OIDN_COMPILE_METAL_DEVICE)
+#if !defined(OIDN_COMPILE_METAL_DEVICE) && !defined(OIDN_COMPILE_VULKAN_DEVICE)
   #include "core/output_process.h"
 #endif
 
 OIDN_NAMESPACE_BEGIN
 
   template<typename SrcT, TensorLayout srcLayout>
-  struct GPUOutputProcessKernel
+  struct GPUOutputProcessKernel WHERE(SrcT, __BuiltinFloatingPointType)
   {
     // Source
     TensorAccessor3D<SrcT, srcLayout> src;
@@ -29,10 +29,14 @@ OIDN_NAMESPACE_BEGIN
 
     // Transfer function
     TransferFunction transferFunc;
-    bool hdr;
-    bool snorm; // signed normalized ([-1..1])
+    KernelBool hdr;
+    KernelBool snorm; // signed normalized ([-1..1])
 
+  #if !defined(OIDN_COMPILE_VULKAN_DEVICE)
     oidn_device_inline void operator ()(const oidn_private WorkItem<2>& it) const
+  #else
+    oidn_device_inline void operator ()(WorkItem<2> it)
+  #endif
     {
       const int h = it.getGlobalID<0>();
       const int w = it.getGlobalID<1>();
@@ -43,7 +47,7 @@ OIDN_NAMESPACE_BEGIN
       const int wDst = w + tile.wDstBegin;
 
       // Load
-      vec3f value = src.get3(0, hSrc, wSrc);
+      vec3f value = vec3f(src.get3(0, hSrc, wSrc));
 
       // The CNN output may contain negative values or even NaNs, so it must be sanitized
       value = math::clamp(math::nan_to_zero(value), 0.f, FLT_MAX);
@@ -73,7 +77,7 @@ OIDN_NAMESPACE_BEGIN
     }
   };
 
-#if !defined(OIDN_COMPILE_METAL_DEVICE)
+#if !defined(OIDN_COMPILE_METAL_DEVICE) && !defined(OIDN_COMPILE_VULKAN_DEVICE)
 
   template<typename EngineT, typename SrcT, TensorLayout srcLayout>
   class GPUOutputProcess : public OutputProcess
@@ -128,6 +132,6 @@ OIDN_NAMESPACE_BEGIN
   #endif
   };
 
-#endif // !defined(OIDN_COMPILE_METAL_DEVICE)
+#endif // !defined(OIDN_COMPILE_METAL_DEVICE) && !defined(OIDN_COMPILE_VULKAN_DEVICE)
 
 OIDN_NAMESPACE_END
