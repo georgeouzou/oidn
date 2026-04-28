@@ -33,6 +33,19 @@ OIDN_NAMESPACE_BEGIN
 #endif
 
   // -----------------------------------------------------------------------------------------------
+  // KernelBool
+  // -----------------------------------------------------------------------------------------------
+
+  // Bool type alias for host/device ABI compatibility with Vulkan
+  #if defined(OIDN_COMPILE_VULKAN_HOST)
+    using KernelBool = uint32_t; // 32-bit
+  #elif defined(OIDN_COMPILE_VULKAN_DEVICE)
+    typealias KernelBool = bool; // 32-bit
+  #else
+    using KernelBool = bool; // 8-bit
+  #endif
+
+  // -----------------------------------------------------------------------------------------------
   // WorkDim
   // -----------------------------------------------------------------------------------------------
 

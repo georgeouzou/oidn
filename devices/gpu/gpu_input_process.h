@@ -15,15 +15,6 @@
 
 OIDN_NAMESPACE_BEGIN
 
-  // Bool type alias for host/device ABI compatibility with Vulkan
-  #if defined(OIDN_COMPILE_VULKAN_HOST)
-    using GPUInputProcessBool = uint32_t;
-  #elif defined(OIDN_COMPILE_VULKAN_DEVICE)
-    typealias GPUInputProcessBool = bool;
-  #else
-    using GPUInputProcessBool = bool;
-  #endif
-
   template<typename DstT, TensorLayout dstLayout, int dstPaddedC>
   struct GPUInputProcessKernel WHERE(DstT, __BuiltinFloatingPointType)
   {
@@ -40,8 +31,8 @@ OIDN_NAMESPACE_BEGIN
 
     // Transfer function
     TransferFunction transferFunc;
-    GPUInputProcessBool hdr;
-    GPUInputProcessBool snorm; // signed normalized ([-1..1])
+    KernelBool hdr;
+    KernelBool snorm; // signed normalized ([-1..1])
 
     oidn_device_inline vec3f getInput(int h, int w) oidn_const_func
     {
