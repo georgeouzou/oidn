@@ -101,6 +101,13 @@ OIDN_NAMESPACE_BEGIN
                                      "_" + toString(srcLayout);
       pipeline = engine->newPipeline(kernelName);
     }
+  #elif defined(OIDN_COMPILE_VULKAN_HOST)
+    void finalize() override
+    {
+      const std::string kernelName = "outputProcess_" + toString(DataTypeOf<SrcT>::value) +
+                                     "_" + toString(srcLayout);
+      pipeline = engine->template newComputePipeline<GPUOutputProcessKernel<SrcT, srcLayout>, 2>(kernelName);
+    }
   #endif
 
     void submitKernels(const Ref<CancellationToken>& ct) override
@@ -118,6 +125,8 @@ OIDN_NAMESPACE_BEGIN
     #if defined(OIDN_COMPILE_METAL)
       engine->submitKernel(WorkDim<2>(tile.H, tile.W), kernel,
                            pipeline, {src->getBuffer(), dst->getBuffer(), scratch});
+    #elif defined(OIDN_COMPILE_VULKAN_HOST)
+      engine->submitKernelGlobal(WorkDim<2>(tile.H, tile.W), kernel, pipeline);
     #else
       engine->submitKernel(WorkDim<2>(tile.H, tile.W), kernel);
     #endif
@@ -129,6 +138,8 @@ OIDN_NAMESPACE_BEGIN
   #if defined(OIDN_COMPILE_METAL)
     Ref<MetalPipeline> pipeline;
     Ref<Buffer> scratch; // may contain autoexposure result, which must be tracked for Metal
+  #elif defined(OIDN_COMPILE_VULKAN_HOST)
+    Ref<VulkanComputePipeline> pipeline;
   #endif
   };
 

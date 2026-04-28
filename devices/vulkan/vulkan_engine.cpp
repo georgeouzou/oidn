@@ -17,6 +17,7 @@
 #include "devices/vulkan/inputProcess3.h"
 #include "devices/vulkan/inputProcess6.h"
 #include "devices/vulkan/inputProcess9.h"
+#include "devices/vulkan/outputProcess.h"
 
 #include <cstring>
 
@@ -45,6 +46,11 @@ namespace
       "inputProcess_f16_hwc_9",
       reinterpret_cast<const uint32_t*>(oidn::blobs::inputProcess9),
       uint32_t(sizeof(oidn::blobs::inputProcess9)),
+    },
+    {
+      "outputProcess_f16_hwc",
+      reinterpret_cast<const uint32_t*>(oidn::blobs::outputProcess),
+      uint32_t(sizeof(oidn::blobs::outputProcess)),
     },
   };
 }
@@ -137,7 +143,7 @@ OIDN_NAMESPACE_BEGIN
 
   Ref<OutputProcess> VulkanEngine::newOutputProcess(const OutputProcessDesc& desc)
   {
-    return nullptr;
+    return makeRef<GPUOutputProcess<VulkanEngine, half, TensorLayout::hwc>>(this, desc);
   }
 
   Ref<ImageCopy> VulkanEngine::newImageCopy()
