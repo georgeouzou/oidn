@@ -70,17 +70,23 @@ void inputProcess9(SystemValues sv,
 [shader("compute")]
 [numthreads(localSizeX, localSizeY, localSizeZ)]
 void outputProcess(SystemValues sv,
+                   uniform uint32_t globalSize0,
+                   uniform uint32_t globalSize1,
                    uniform oidn::GPUOutputProcessKernel<half, oidn::TensorLayout::hwc> params)
 {
   oidn::WorkItem<2> it = { sv.globalID };
+  if (it.getGlobalID<0>() >= (int)globalSize0 || it.getGlobalID<1>() >= (int)globalSize1) return;
   params(it);
 }
 
 [shader("compute")]
 [numthreads(localSizeX, localSizeY, localSizeZ)]
 void imageCopy(SystemValues sv,
+               uniform uint32_t globalSize0,
+               uniform uint32_t globalSize1,
                uniform oidn::GPUImageCopyKernel params)
 {
   oidn::WorkItem<2> it = { sv.globalID };
+  if (it.getGlobalID<0>() >= (int)globalSize0 || it.getGlobalID<1>() >= (int)globalSize1) return;
   params(it);
 }
