@@ -52,11 +52,11 @@ OIDN_NAMESPACE_BEGIN
 
     VkDeviceSize getMaxBufferSize() const { return maxBufferSize; }
 
-    template<typename PushData, int N>
+    template<typename Kernel, int N>
     Ref<VulkanComputePipeline> newComputePipeline(const std::string& kernelName,
                                                   WorkDim<N> localSize)
     {
-      return newComputePipelineImpl(kernelName, localSize, uint32_t(sizeof(PushData)));
+      return newComputePipelineImpl(kernelName, localSize, uint32_t(sizeof(Kernel)));
     }
 
     template<typename Kernel, int N>
@@ -72,7 +72,7 @@ OIDN_NAMESPACE_BEGIN
     }
 
     // Enqueues a kernel with explicit numGroups
-    template<int N, typename Kernel>
+    template<typename Kernel, int N>
     oidn_inline void submitKernel(WorkDim<N> numGroups,
                                   const Kernel& kernel,
                                   const Ref<VulkanComputePipeline>& pipeline)
@@ -81,7 +81,7 @@ OIDN_NAMESPACE_BEGIN
     }
 
     // Enqueues a kernel with implicit numGroups
-    template<int N, typename Kernel>
+    template<typename Kernel, int N>
     oidn_inline void submitKernelGlobal(WorkDim<N> globalSize,
                                         const Kernel& kernel,
                                         const Ref<VulkanComputePipeline>& pipeline)

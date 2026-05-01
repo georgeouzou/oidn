@@ -14,9 +14,9 @@
 #include "devices/gpu/gpu_image_copy.h"
 #include "devices/gpu/gpu_pool.h"
 #include "devices/gpu/gpu_upsample.h"
-#include "devices/vulkan/inputProcess3.h"
-#include "devices/vulkan/inputProcess6.h"
-#include "devices/vulkan/inputProcess9.h"
+#include "devices/vulkan/inputProcess_f16_hwc_3.h"
+#include "devices/vulkan/inputProcess_f16_hwc_6.h"
+#include "devices/vulkan/inputProcess_f16_hwc_9.h"
 #include "devices/vulkan/outputProcess.h"
 #include "devices/vulkan/imageCopy.h"
 
@@ -35,18 +35,18 @@ namespace
   {
     {
       "inputProcess_f16_hwc_3",
-      reinterpret_cast<const uint32_t*>(oidn::blobs::inputProcess3),
-      uint32_t(sizeof(oidn::blobs::inputProcess3)),
+      reinterpret_cast<const uint32_t*>(oidn::blobs::inputProcess_f16_hwc_3),
+      uint32_t(sizeof(oidn::blobs::inputProcess_f16_hwc_3)),
     },
     {
       "inputProcess_f16_hwc_6",
-      reinterpret_cast<const uint32_t*>(oidn::blobs::inputProcess6),
-      uint32_t(sizeof(oidn::blobs::inputProcess6)),
+      reinterpret_cast<const uint32_t*>(oidn::blobs::inputProcess_f16_hwc_6),
+      uint32_t(sizeof(oidn::blobs::inputProcess_f16_hwc_6)),
     },
     {
       "inputProcess_f16_hwc_9",
-      reinterpret_cast<const uint32_t*>(oidn::blobs::inputProcess9),
-      uint32_t(sizeof(oidn::blobs::inputProcess9)),
+      reinterpret_cast<const uint32_t*>(oidn::blobs::inputProcess_f16_hwc_9),
+      uint32_t(sizeof(oidn::blobs::inputProcess_f16_hwc_9)),
     },
     {
       "outputProcess_f16_hwc",

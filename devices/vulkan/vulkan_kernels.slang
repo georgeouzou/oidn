@@ -23,7 +23,7 @@ namespace oidn
   typealias TensorByteOffset4D = TensorByteOffset_oihw<T>;
 }
 
-struct SystemValues
+struct SystemValues2D
 {
   uint2 globalID : SV_DispatchThreadID;
   uint2 localID : SV_GroupThreadID;
@@ -42,8 +42,8 @@ const uint localSizeZ = 1;
 
 [shader("compute")]
 [numthreads(localSizeX, localSizeY, localSizeZ)]
-void inputProcess3(SystemValues sv,
-                   uniform oidn::GPUInputProcessKernel<half, oidn::TensorLayout::hwc, 3> params)
+void inputProcess_f16_hwc_3(SystemValues2D sv,
+                            uniform oidn::GPUInputProcessKernel<half, oidn::TensorLayout::hwc, 3> params)
 {
   oidn::WorkGroupItem<2> it = { sv.globalID, sv.localID, sv.groupID, sv.localIndex };
   params(it);
@@ -51,8 +51,8 @@ void inputProcess3(SystemValues sv,
 
 [shader("compute")]
 [numthreads(localSizeX, localSizeY, localSizeZ)]
-void inputProcess6(SystemValues sv,
-                   uniform oidn::GPUInputProcessKernel<half, oidn::TensorLayout::hwc, 6> params)
+void inputProcess_f16_hwc_6(SystemValues2D sv,
+                            uniform oidn::GPUInputProcessKernel<half, oidn::TensorLayout::hwc, 6> params)
 {
   oidn::WorkGroupItem<2> it = { sv.globalID, sv.localID, sv.groupID, sv.localIndex };
   params(it);
@@ -60,8 +60,8 @@ void inputProcess6(SystemValues sv,
 
 [shader("compute")]
 [numthreads(localSizeX, localSizeY, localSizeZ)]
-void inputProcess9(SystemValues sv,
-                   uniform oidn::GPUInputProcessKernel<half, oidn::TensorLayout::hwc, 9> params)
+void inputProcess_f16_hwc_9(SystemValues2D sv,
+                            uniform oidn::GPUInputProcessKernel<half, oidn::TensorLayout::hwc, 9> params)
 {
   oidn::WorkGroupItem<2> it = { sv.globalID, sv.localID, sv.groupID, sv.localIndex };
   params(it);
@@ -69,7 +69,7 @@ void inputProcess9(SystemValues sv,
 
 [shader("compute")]
 [numthreads(localSizeX, localSizeY, localSizeZ)]
-void outputProcess(SystemValues sv,
+void outputProcess(SystemValues2D sv,
                    uniform uint32_t globalSize0,
                    uniform uint32_t globalSize1,
                    uniform oidn::GPUOutputProcessKernel<half, oidn::TensorLayout::hwc> params)
@@ -81,7 +81,7 @@ void outputProcess(SystemValues sv,
 
 [shader("compute")]
 [numthreads(localSizeX, localSizeY, localSizeZ)]
-void imageCopy(SystemValues sv,
+void imageCopy(SystemValues2D sv,
                uniform uint32_t globalSize0,
                uniform uint32_t globalSize1,
                uniform oidn::GPUImageCopyKernel params)
