@@ -2,13 +2,17 @@
 ## SPDX-License-Identifier: Apache-2.0
 
 # Find slangc compiler
-find_program(SLANG_COMPILER slangc
-  HINTS
-    ${Vulkan_INCLUDE_DIR}/../bin
-    $ENV{VULKAN_SDK}/bin
-    $ENV{VULKAN_SDK}/Bin
-  DOC "Path to the Vulkan SDK slangc compiler"
-)
+if(OIDN_SLANG_COMPILER)
+  set(SLANG_COMPILER ${OIDN_SLANG_COMPILER})
+else()
+  find_program(SLANG_COMPILER slangc
+    HINTS
+      ${Vulkan_INCLUDE_DIR}/../bin
+      $ENV{VULKAN_SDK}/bin
+      $ENV{VULKAN_SDK}/Bin
+    DOC "Path to the Vulkan SDK slangc compiler"
+  )
+endif()
 
 if(NOT SLANG_COMPILER)
   message(FATAL_ERROR "Slangc compiler not found. Please ensure it is available in the Vulkan SDK bin directory or in PATH.")
