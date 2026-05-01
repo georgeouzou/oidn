@@ -13,7 +13,12 @@ OIDN_NAMESPACE_BEGIN
   template<int maxBinSize>
   struct GPUAutoexposureDownsampleKernel
   {
+  #if !defined(OIDN_COMPILE_VULKAN_DEVICE)
     static constexpr oidn_constant int groupSize = maxBinSize * maxBinSize;
+  #else
+    // this is a bug in slangc (https://github.com/shader-slang/slang/issues/10940), when it is fixed remove this
+    static const int groupSize = maxBinSize * maxBinSize;
+  #endif
 
     ImageAccessor src;
     oidn_global float* bins;
@@ -24,7 +29,11 @@ OIDN_NAMESPACE_BEGIN
       float sums[groupSize];
     };
 
-    oidn_device_inline void operator ()(const oidn_private WorkGroupItem<2>& it, LocalPtr<Local> local) const
+  #if !defined(OIDN_COMPILE_VULKAN_DEVICE)
+    oidn_device_inline void operator ()(const oidn_private WorkGroupItem<2>& it, LocalPtr<Local> local) oidn_const_func
+  #else
+    oidn_device_inline void operator ()(oidn_private WorkGroupItem<2> it, LocalPtr<Local> local) oidn_const_func
+  #endif
     {
       const int beginH = it.getGroupID<0>() * src.H / it.getNumGroups<0>();
       const int beginW = it.getGroupID<1>() * src.W / it.getNumGroups<1>();
@@ -37,7 +46,7 @@ OIDN_NAMESPACE_BEGIN
       float L;
       if (h < endH && w < endW)
       {
-        vec3f c = src.get3(h, w);
+        vec3f c = src.get3<float>(h, w);
         c = math::clamp(math::nan_to_zero(c), 0.f, FLT_MAX); // sanitize
         L = luminance(c);
       }
@@ -67,7 +76,7 @@ OIDN_NAMESPACE_BEGIN
   template<int groupSize>
   struct GPUAutoexposureReduceKernel
   {
-    const oidn_global float* bins;
+    oidn_global_readonly_ptr(float) bins;
     int size;
     oidn_global float* sums;
     oidn_global int* counts;
@@ -79,7 +88,11 @@ OIDN_NAMESPACE_BEGIN
       int counts[groupSize];
     };
 
-    oidn_device_inline void operator ()(const oidn_private WorkGroupItem<1>& it, LocalPtr<Local> local) const
+  #if !defined(OIDN_COMPILE_VULKAN_DEVICE)
+    oidn_device_inline void operator ()(const oidn_private WorkGroupItem<1>& it, LocalPtr<Local> local) oidn_const_func
+  #else
+    oidn_device_inline void operator ()(oidn_private WorkGroupItem<1> it, LocalPtr<Local> local) oidn_const_func
+  #endif
     {
       float sum = 0;
       int count = 0;
@@ -118,8 +131,8 @@ OIDN_NAMESPACE_BEGIN
   template<int groupSize>
   struct GPUAutoexposureReduceFinalKernel
   {
-    const oidn_global float* sums;
-    const oidn_global int* counts;
+    oidn_global_readonly_ptr(float) sums;
+    oidn_global_readonly_ptr(int) counts;
     int size;
     oidn_global float* result;
 
@@ -130,7 +143,11 @@ OIDN_NAMESPACE_BEGIN
       int counts[groupSize];
     };
 
-    oidn_device_inline void operator ()(const oidn_private WorkGroupItem<1>& it, LocalPtr<Local> local) const
+  #if !defined(OIDN_COMPILE_VULKAN_DEVICE)
+    oidn_device_inline void operator ()(const oidn_private WorkGroupItem<1>& it, LocalPtr<Local> local) oidn_const_func
+  #else
+    oidn_device_inline void operator ()(oidn_private WorkGroupItem<1> it, LocalPtr<Local> local) oidn_const_func
+  #endif
     {
       const int localID = it.getLocalID();
 
@@ -163,7 +180,7 @@ OIDN_NAMESPACE_BEGIN
     }
   };
 
-#if !defined(OIDN_COMPILE_METAL_DEVICE)
+#if !defined(OIDN_COMPILE_METAL_DEVICE) && !defined(OIDN_COMPILE_VULKAN_DEVICE)
 
   template<typename EngineT, int groupSize>
   class GPUAutoexposure final : public Autoexposure

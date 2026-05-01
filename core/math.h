@@ -47,10 +47,14 @@ namespace math {
   template<typename T> T max(T a, T b) where T:IFloat { return max(a, b); }
   template<typename T> T pow(T x, T y) where T:__BuiltinFloatingPointType { return pow(x, y); }
   template<typename T> T log(T x) where T:__BuiltinFloatingPointType { return log(x); }
+  template<typename T> T log2(T x) where T:__BuiltinFloatingPointType { return log2(x); }
   template<typename T> T exp(T x) where T:__BuiltinFloatingPointType { return exp(x); }
+  template<typename T> T exp2(T x) where T:__BuiltinFloatingPointType { return exp2(x); }
   template<typename T, int N> vector<T, N> pow(vector<T, N> x, T y) where T:__BuiltinFloatingPointType { return pow(x, y); }
   template<typename T, int N> vector<T, N> log(vector<T, N> x) where T:__BuiltinFloatingPointType { return log(x); }
+  template<typename T, int N> vector<T, N> log2(vector<T, N> x) where T:__BuiltinFloatingPointType { return log2(x); }
   template<typename T, int N> vector<T, N> exp(vector<T, N> x) where T:__BuiltinFloatingPointType { return exp(x); }
+  template<typename T, int N> vector<T, N> exp2(vector<T, N> x) where T:__BuiltinFloatingPointType { return exp2(x); }
 #else
   using OIDN_NAMESPACE::min;
   using OIDN_NAMESPACE::max;

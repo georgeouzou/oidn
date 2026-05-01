@@ -22,7 +22,15 @@ OIDN_NAMESPACE_BEGIN
   template<typename T>
   using LocalPtr  = sycl::multi_ptr<T, sycl::access::address_space::local_space>;
 
-#elif !defined(OIDN_COMPILE_VULKAN_DEVICE)
+#elif defined(OIDN_COMPILE_VULKAN_DEVICE)
+
+  template<typename T>
+  typealias GlobalPtr = T*; // Ptr<T, Access.ReadWrite, AddressSpace.Device>
+
+  template<typename T>
+  typealias LocalPtr = Ptr<T, Access.ReadWrite, AddressSpace.GroupShared>;
+
+#else
 
   template<typename T>
   using GlobalPtr = oidn_global T*;
@@ -467,6 +475,14 @@ OIDN_NAMESPACE_BEGIN
     template<int i> oidn_device_inline int getLocalSize()  { return WorkgroupSize()[N-1-i]; }
     template<int i> oidn_device_inline int getGroupID()    { return groupID[N-1-i]; }
     template<int i> oidn_device_inline int getNumGroups()  { return WorkgroupCount()[N-1-i]; }
+
+    // overloads for N=1 (slang does not support default template params yet)
+    oidn_device_inline int getGlobalID()   { return getGlobalID<0>(); }
+    oidn_device_inline int getGlobalSize() { return getGlobalSize<0>(); }
+    oidn_device_inline int getLocalID()    { return getLocalID<0>(); }
+    oidn_device_inline int getLocalSize()  { return getLocalSize<0>(); }
+    oidn_device_inline int getGroupID()    { return getGroupID<0>(); }
+    oidn_device_inline int getNumGroups()  { return getNumGroups<0>(); }
 
     oidn_device_inline int getGlobalLinearID()
     {

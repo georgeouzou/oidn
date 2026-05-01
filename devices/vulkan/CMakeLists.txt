@@ -39,7 +39,7 @@ slang_target_add_sources(OpenImageDenoise_device_vulkan vulkan_kernels
     ${PROJECT_SOURCE_DIR}
   ENTRY_POINTS
     inputProcess_f16_hwc_3 inputProcess_f16_hwc_6 inputProcess_f16_hwc_9
-    outputProcess imageCopy
+    outputProcess imageCopy autoexposureDownsample autoexposureReduce_1024 autoexposureReduceFinal_1024
 )
 
 set_target_properties(OpenImageDenoise_device_vulkan PROPERTIES

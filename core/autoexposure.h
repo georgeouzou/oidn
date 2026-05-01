@@ -3,7 +3,7 @@
 
 #pragma once
 
-#if !defined(OIDN_COMPILE_METAL_DEVICE)
+#if !defined(OIDN_COMPILE_METAL_DEVICE) && !defined(OIDN_COMPILE_VULKAN_DEVICE)
   #include "op.h"
   #include "image.h"
   #include "record.h"
@@ -18,7 +18,7 @@ OIDN_NAMESPACE_BEGIN
     static constexpr oidn_constant float eps = 1e-8f;
   };
 
-#if !defined(OIDN_COMPILE_METAL_DEVICE)
+#if !defined(OIDN_COMPILE_METAL_DEVICE) && !defined(OIDN_COMPILE_VULKAN_DEVICE)
 
   class Autoexposure : public BaseOp, public AutoexposureParams
   {

@@ -10,6 +10,7 @@
 #include "devices/gpu/gpu_input_process.h"
 #include "devices/gpu/gpu_output_process.h"
 #include "devices/gpu/gpu_image_copy.h"
+#include "devices/gpu/gpu_autoexposure.h"
 
 namespace oidn
 {
@@ -22,6 +23,14 @@ namespace oidn
   template<typename T, TensorLayout layout>
   typealias TensorByteOffset4D = TensorByteOffset_oihw<T>;
 }
+
+struct SystemValues1D
+{
+  uint globalID : SV_DispatchThreadID;
+  uint localID : SV_GroupThreadID;
+  uint groupID : SV_GroupID;
+  uint localIndex : SV_GroupIndex;
+};
 
 struct SystemValues2D
 {
@@ -89,4 +98,41 @@ void imageCopy(SystemValues2D sv,
   oidn::WorkItem<2> it = { sv.globalID };
   if (it.getGlobalID<0>() >= (int)globalSize0 || it.getGlobalID<1>() >= (int)globalSize1) return;
   params(it);
+}
+
+// we do not need this declaration after
+// https://github.com/shader-slang/slang/issues/10940 is fixed
+static const uint32_t maxBinSize = 16; //oidn::AutoexposureParams::maxBinSize;
+
+groupshared oidn::GPUAutoexposureDownsampleKernel<maxBinSize>::Local autoexposureDownsampleLocal;
+
+[shader("compute")]
+[numthreads(localSizeX, localSizeY, localSizeZ)]
+void autoexposureDownsample(SystemValues2D sv,
+                            uniform oidn::GPUAutoexposureDownsampleKernel<maxBinSize> params)
+{
+  oidn::WorkGroupItem<2> it = { sv.globalID, sv.localID, sv.groupID, sv.localIndex };
+  params(it, __getAddress(autoexposureDownsampleLocal));
+}
+
+groupshared oidn::GPUAutoexposureReduceKernel<1024>::Local autoexposureReduceLocal;
+
+[shader("compute")]
+[numthreads(localSizeX, localSizeY, localSizeZ)]
+void autoexposureReduce_1024(SystemValues1D sv,
+                             uniform oidn::GPUAutoexposureReduceKernel<1024> params)
+{
+  oidn::WorkGroupItem<1> it = { sv.globalID, sv.localID, sv.groupID, sv.localIndex };
+  params(it, __getAddress(autoexposureReduceLocal));
+}
+
+groupshared oidn::GPUAutoexposureReduceFinalKernel<1024>::Local autoexposureReduceFinalLocal;
+
+[shader("compute")]
+[numthreads(localSizeX, localSizeY, localSizeZ)]
+void autoexposureReduceFinal_1024(SystemValues1D sv,
+                                  uniform oidn::GPUAutoexposureReduceFinalKernel<1024> params)
+{
+  oidn::WorkGroupItem<1> it = { sv.globalID, sv.localID, sv.groupID, sv.localIndex };
+  params(it, __getAddress(autoexposureReduceFinalLocal));
 }
