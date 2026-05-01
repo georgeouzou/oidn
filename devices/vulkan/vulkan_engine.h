@@ -32,6 +32,7 @@ OIDN_NAMESPACE_BEGIN
     Ref<Buffer> newBuffer(const Ref<Arena>& arena, size_t byteSize, size_t byteOffset) override;
 
     // Ops
+    bool isConvSupported(PostOp postOp) override;
     Ref<Conv> newConv(const ConvDesc& desc) override;
     Ref<Pool> newPool(const PoolDesc& desc) override;
     Ref<Upsample> newUpsample(const UpsampleDesc& desc) override;

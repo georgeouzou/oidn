@@ -7,13 +7,11 @@
 #include "vulkan_pipeline.h"
 #include "vulkan_common.h"
 
-#include "core/conv.h"
 #include "devices/gpu/gpu_input_process.h"
 #include "devices/gpu/gpu_autoexposure.h"
 #include "devices/gpu/gpu_output_process.h"
 #include "devices/gpu/gpu_image_copy.h"
-#include "devices/gpu/gpu_pool.h"
-#include "devices/gpu/gpu_upsample.h"
+#include "devices/vulkan/vulkan_conv.h"
 #include "devices/vulkan/autoexposureDownsample.h"
 #include "devices/vulkan/autoexposureReduce_1024.h"
 #include "devices/vulkan/autoexposureReduceFinal_1024.h"
@@ -22,6 +20,7 @@
 #include "devices/vulkan/inputProcess_f16_hwc_9.h"
 #include "devices/vulkan/outputProcess.h"
 #include "devices/vulkan/imageCopy.h"
+#include "devices/vulkan/conv.h"
 
 #include <cstring>
 
@@ -75,6 +74,12 @@ namespace
       "autoexposureReduceFinal_1024",
       reinterpret_cast<const uint32_t*>(oidn::blobs::autoexposureReduceFinal_1024),
       uint32_t(sizeof(oidn::blobs::autoexposureReduceFinal_1024)),
+    },
+
+    {
+      "conv",
+      reinterpret_cast<const uint32_t*>(oidn::blobs::conv),
+      uint32_t(sizeof(oidn::blobs::conv)),
     },
   };
 }
@@ -140,19 +145,24 @@ OIDN_NAMESPACE_BEGIN
     return makeRef<VulkanBuffer>(arena, byteSize, byteOffset);
   }
 
+  bool VulkanEngine::isConvSupported(PostOp postOp)
+  {
+    return postOp == PostOp::None || postOp == PostOp::Pool || postOp == PostOp::Upsample;
+  }
+
   Ref<Conv> VulkanEngine::newConv(const ConvDesc& desc)
   {
-    return nullptr;
+    return makeRef<VulkanConv>(this, desc);
   }
 
   Ref<Pool> VulkanEngine::newPool(const PoolDesc& desc)
   {
-    return nullptr;
+    throw std::logic_error("operation is not implemented");
   }
 
   Ref<Upsample> VulkanEngine::newUpsample(const UpsampleDesc& desc)
   {
-    return nullptr;
+    throw std::logic_error("operation is not implemented");
   }
 
   Ref<Autoexposure> VulkanEngine::newAutoexposure(const ImageDesc& srcDesc)

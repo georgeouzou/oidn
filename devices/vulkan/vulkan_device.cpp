@@ -312,7 +312,7 @@ OIDN_NAMESPACE_BEGIN
     tensorDataType = DataType::Float16;
     weightDataType = DataType::Float16;
     tensorLayout   = TensorLayout::hwc;
-    weightLayout   = TensorLayout::oihw;
+    weightLayout   = TensorLayout::ohwi;
     tensorBlockC   = 1;
 
     subdevices.emplace_back(new Subdevice(std::unique_ptr<Engine>(new VulkanEngine(this, getQueue()))));
