@@ -205,6 +205,14 @@ OIDN_NAMESPACE_BEGIN
       reducePipeline = engine->newPipeline("autoexposureReduce_" + toString(groupSize));
       reduceFinalPipeline = engine->newPipeline("autoexposureReduceFinal_" + toString(groupSize));
     }
+  #elif defined(OIDN_COMPILE_VULKAN_HOST)
+    void finalize() override
+    {
+      // TODO: choose the reduction group size like SYCL once Vulkan workgroup limits are handled.
+      downsamplePipeline = engine->template newComputePipeline<GPUAutoexposureDownsampleKernel<maxBinSize>, 2>("autoexposureDownsample", {maxBinSize, maxBinSize});
+      reducePipeline = engine->template newComputePipeline<GPUAutoexposureReduceKernel<groupSize>, 1>("autoexposureReduce_" + toString(groupSize), {groupSize});
+      reduceFinalPipeline = engine->template newComputePipeline<GPUAutoexposureReduceFinalKernel<groupSize>, 1>("autoexposureReduceFinal_" + toString(groupSize), {groupSize});
+    }
   #endif
 
     size_t getScratchByteSize() override
@@ -259,6 +267,10 @@ OIDN_NAMESPACE_BEGIN
 
       engine->submitKernel(WorkDim<1>(1), WorkDim<1>(groupSize), reduceFinal,
                            reduceFinalPipeline, {scratch});
+    #elif defined(OIDN_COMPILE_VULKAN_HOST)
+      engine->submitKernel(WorkDim<2>(numBinsH, numBinsW), downsample, downsamplePipeline);
+      engine->submitKernel(WorkDim<1>(numGroups), reduce, reducePipeline);
+      engine->submitKernel(WorkDim<1>(1), reduceFinal, reduceFinalPipeline);
     #else
       engine->submitKernel(WorkDim<2>(numBinsH, numBinsW), WorkDim<2>(maxBinSize, maxBinSize), downsample);
       engine->submitKernel(WorkDim<1>(numGroups), WorkDim<1>(groupSize), reduce);
@@ -276,6 +288,10 @@ OIDN_NAMESPACE_BEGIN
     Ref<MetalPipeline> downsamplePipeline;
     Ref<MetalPipeline> reducePipeline;
     Ref<MetalPipeline> reduceFinalPipeline;
+  #elif defined(OIDN_COMPILE_VULKAN_HOST)
+    Ref<VulkanComputePipeline> downsamplePipeline;
+    Ref<VulkanComputePipeline> reducePipeline;
+    Ref<VulkanComputePipeline> reduceFinalPipeline;
   #endif
   };
 

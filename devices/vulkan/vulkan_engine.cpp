@@ -14,6 +14,9 @@
 #include "devices/gpu/gpu_image_copy.h"
 #include "devices/gpu/gpu_pool.h"
 #include "devices/gpu/gpu_upsample.h"
+#include "devices/vulkan/autoexposureDownsample.h"
+#include "devices/vulkan/autoexposureReduce_1024.h"
+#include "devices/vulkan/autoexposureReduceFinal_1024.h"
 #include "devices/vulkan/inputProcess_f16_hwc_3.h"
 #include "devices/vulkan/inputProcess_f16_hwc_6.h"
 #include "devices/vulkan/inputProcess_f16_hwc_9.h"
@@ -57,6 +60,21 @@ namespace
       "imageCopy",
       reinterpret_cast<const uint32_t*>(oidn::blobs::imageCopy),
       uint32_t(sizeof(oidn::blobs::imageCopy)),
+    },
+    {
+      "autoexposureDownsample",
+      reinterpret_cast<const uint32_t*>(oidn::blobs::autoexposureDownsample),
+      uint32_t(sizeof(oidn::blobs::autoexposureDownsample)),
+    },
+    {
+      "autoexposureReduce_1024",
+      reinterpret_cast<const uint32_t*>(oidn::blobs::autoexposureReduce_1024),
+      uint32_t(sizeof(oidn::blobs::autoexposureReduce_1024)),
+    },
+    {
+      "autoexposureReduceFinal_1024",
+      reinterpret_cast<const uint32_t*>(oidn::blobs::autoexposureReduceFinal_1024),
+      uint32_t(sizeof(oidn::blobs::autoexposureReduceFinal_1024)),
     },
   };
 }
@@ -139,7 +157,8 @@ OIDN_NAMESPACE_BEGIN
 
   Ref<Autoexposure> VulkanEngine::newAutoexposure(const ImageDesc& srcDesc)
   {
-    return nullptr;
+    // TODO: choose group size from Vulkan device limits like SYCL once we support it.
+    return makeRef<GPUAutoexposure<VulkanEngine, 1024>>(this, srcDesc);
   }
 
   Ref<InputProcess> VulkanEngine::newInputProcess(const InputProcessDesc& desc)
