@@ -19,8 +19,8 @@ OIDN_NAMESPACE_BEGIN
     pushConstantRange.offset = 0;
     pushConstantRange.size = pushConstantSize;
 
-    VkPipelineLayoutCreateInfo plci = {
-      VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO, 0 };
+    VkPipelineLayoutCreateInfo plci{};
+    plci.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     plci.pushConstantRangeCount = 1;
     plci.pPushConstantRanges = &pushConstantRange;
 
@@ -56,17 +56,15 @@ OIDN_NAMESPACE_BEGIN
       specInfo.dataSize = sizeof(specData);
       specInfo.pData = specData;
 
-      VkPipelineShaderStageCreateInfo ssci = {
-        VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, 0
-      };
+      VkPipelineShaderStageCreateInfo ssci{};
+      ssci.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
       ssci.stage = VK_SHADER_STAGE_COMPUTE_BIT;
       ssci.module = createShaderModule(spirvData, spirvSize);
       ssci.pName = "main";
       ssci.pSpecializationInfo = &specInfo;
 
-      VkComputePipelineCreateInfo pci = {
-        VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO, 0
-      };
+      VkComputePipelineCreateInfo pci{};
+      pci.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
       pci.layout = pipelineLayout;
       pci.stage = ssci;
 
@@ -99,9 +97,8 @@ OIDN_NAMESPACE_BEGIN
 
   VkShaderModule VulkanComputePipeline::createShaderModule(const uint32_t *spirvData, size_t spirvSize) const
   {
-    VkShaderModuleCreateInfo shaderModuleInfo = {
-      VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO, nullptr
-    };
+    VkShaderModuleCreateInfo shaderModuleInfo{};
+    shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     shaderModuleInfo.codeSize = spirvSize;
     shaderModuleInfo.pCode = spirvData;
 

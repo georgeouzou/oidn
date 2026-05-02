@@ -88,14 +88,16 @@ OIDN_NAMESPACE_BEGIN
       }
     }
 
-    VkApplicationInfo ai = { VK_STRUCTURE_TYPE_APPLICATION_INFO, 0 };
+    VkApplicationInfo ai{};
+    ai.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     ai.pApplicationName = "Open Image Denoise";
     ai.applicationVersion = OIDN_VERSION;
     ai.pEngineName = "Open Image Denoise";
     ai.engineVersion = OIDN_VERSION;
     ai.apiVersion = VK_API_VERSION_1_2;
 
-    VkInstanceCreateInfo ici = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, 0 };
+    VkInstanceCreateInfo ici{};
+    ici.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     ici.pApplicationInfo = &ai;
 
     VkResult res = vkCreateInstance(&ici, nullptr, &this->instance);
@@ -113,14 +115,14 @@ OIDN_NAMESPACE_BEGIN
       pDev(pDev)
   {
     const bool hasPCIBusInfo = supportsExtension(pDev, VK_EXT_PCI_BUS_INFO_EXTENSION_NAME);
-    VkPhysicalDeviceProperties2 props = {
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, 0 };
-    VkPhysicalDeviceVulkan11Properties v11Props = {
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES, 0 };
-    VkPhysicalDeviceVulkan12Properties v12Props = {
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES, 0 };
-    VkPhysicalDevicePCIBusInfoPropertiesEXT pciProps = {
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PCI_BUS_INFO_PROPERTIES_EXT, 0 };
+    VkPhysicalDeviceProperties2 props{};
+    props.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+    VkPhysicalDeviceVulkan11Properties v11Props{};
+    v11Props.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES;
+    VkPhysicalDeviceVulkan12Properties v12Props{};
+    v12Props.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
+    VkPhysicalDevicePCIBusInfoPropertiesEXT pciProps{};
+    pciProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PCI_BUS_INFO_PROPERTIES_EXT;
 
     if (hasPCIBusInfo)
       v12Props.pNext = &pciProps;
@@ -201,12 +203,12 @@ OIDN_NAMESPACE_BEGIN
     const bool hasMaintenance4 = supportsExtension(pDev, VK_KHR_MAINTENANCE_4_EXTENSION_NAME);
     // Spec: If VK_KHR_maintenance4 is supported, maintenance4 must be supported
 
-    VkPhysicalDeviceVulkan12Features v12Features = {
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES, 0 };
-    VkPhysicalDeviceVulkan11Features v11Features = {
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES, 0 };
-    VkPhysicalDeviceFeatures2 feats = {
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, 0 };
+    VkPhysicalDeviceVulkan12Features v12Features{};
+    v12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    VkPhysicalDeviceVulkan11Features v11Features{};
+    v11Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+    VkPhysicalDeviceFeatures2 feats{};
+    feats.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 
     feats.pNext = &v11Features;
     v11Features.pNext = &v12Features;
@@ -233,29 +235,29 @@ OIDN_NAMESPACE_BEGIN
 
     const float queuePriorities[] = { 1.0f };
 
-    VkDeviceQueueCreateInfo qci = {
-      VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO, 0 };
+    VkDeviceQueueCreateInfo qci{};
+    qci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     qci.queueCount = 1;
     qci.pQueuePriorities = queuePriorities;
     qci.queueFamilyIndex = queueFamilyIndex;
 
-    VkPhysicalDeviceFeatures2 feats = {
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, 0 };
+    VkPhysicalDeviceFeatures2 feats{};
+    feats.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
     feats.features.shaderInt64 = VK_TRUE;
 
-    VkPhysicalDeviceVulkan11Features v11Features = {
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES, 0 };
+    VkPhysicalDeviceVulkan11Features v11Features{};
+    v11Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
     v11Features.storageBuffer16BitAccess = VK_TRUE;
 
-    VkPhysicalDeviceVulkan12Features v12Features = {
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES, 0 };
+    VkPhysicalDeviceVulkan12Features v12Features{};
+    v12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
     v12Features.bufferDeviceAddress = VK_TRUE;
     v12Features.shaderFloat16 = VK_TRUE;
     v12Features.shaderInt8 = VK_TRUE;
     v12Features.storagePushConstant8 = VK_TRUE;
 
-    VkPhysicalDeviceMaintenance4FeaturesKHR maint4Features = {
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES_KHR, 0 };
+    VkPhysicalDeviceMaintenance4FeaturesKHR maint4Features{};
+    maint4Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES_KHR;
     maint4Features.maintenance4 = VK_TRUE;
 
     feats.pNext = &v11Features;
@@ -264,7 +266,8 @@ OIDN_NAMESPACE_BEGIN
 
     const char* extensions[] = { VK_KHR_MAINTENANCE_4_EXTENSION_NAME };
 
-    VkDeviceCreateInfo ci = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO, 0 };
+    VkDeviceCreateInfo ci{};
+    ci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     ci.queueCreateInfoCount = 1;
     ci.pQueueCreateInfos = &qci;
     ci.pNext = &feats;
@@ -293,10 +296,10 @@ OIDN_NAMESPACE_BEGIN
     if (!isSupported(*physicalDevice))
       throw Exception(Error::UnsupportedHardware, "unsupported Vulkan device");
 
-    VkPhysicalDeviceVulkan11Properties v11Props = {
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES, 0 };
-    VkPhysicalDeviceProperties2 props = {
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, 0 };
+    VkPhysicalDeviceVulkan11Properties v11Props{};
+    v11Props.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES;
+    VkPhysicalDeviceProperties2 props{};
+    props.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
     props.pNext = &v11Props;
     vkGetPhysicalDeviceProperties2(*physicalDevice, &props);
 

@@ -28,15 +28,18 @@ OIDN_NAMESPACE_BEGIN
 
     try
     {
-      VkBufferCreateInfo bci = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, 0 };
+      VkBufferCreateInfo bci{};
+      bci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
       bci.size = byteSize;
       bci.usage = getCommonVkBufferUsageFlags();
 
-      VkDeviceBufferMemoryRequirementsKHR dbmr = { VK_STRUCTURE_TYPE_DEVICE_BUFFER_MEMORY_REQUIREMENTS_KHR, 0 };
+      VkDeviceBufferMemoryRequirementsKHR dbmr{};
+      dbmr.sType = VK_STRUCTURE_TYPE_DEVICE_BUFFER_MEMORY_REQUIREMENTS_KHR;
       dbmr.pCreateInfo = &bci;
 
       const VulkanDevice *vkDevice = static_cast<const VulkanDevice*>(engine->getDevice());
-      VkMemoryRequirements2 memReqs = { VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2, 0 };
+      VkMemoryRequirements2 memReqs{};
+      memReqs.sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2;
       vkDevice->getDeviceBufferMemoryRequirements(&dbmr, &memReqs);
 
       VkMemoryPropertyFlags memFlags = toVkMemoryFlags(storage);
@@ -103,12 +106,14 @@ OIDN_NAMESPACE_BEGIN
 
   std::pair<VkDeviceMemory, uint32_t> VulkanHeap::allocateMemory(VkDeviceSize byteSize, uint32_t memoryTypeBits, VkMemoryPropertyFlags props) const
   {
-    VkMemoryAllocateFlagsInfo fi = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO, 0 };
+    VkMemoryAllocateFlagsInfo fi{};
+    fi.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
     fi.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
 
     uint32_t typeIndex = findMemoryType(memoryTypeBits, props);
 
-    VkMemoryAllocateInfo mai = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO, 0 };
+    VkMemoryAllocateInfo mai{};
+    mai.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     mai.pNext = &fi;
     mai.allocationSize = byteSize;
     mai.memoryTypeIndex = typeIndex;

@@ -89,13 +89,16 @@ OIDN_NAMESPACE_BEGIN
   VulkanEngine::VulkanEngine(VulkanDevice* device, const VulkanQueue& queue)
     : device(device)
   {
-    VkPhysicalDeviceMaintenance4PropertiesKHR maint4Props = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_PROPERTIES_KHR, 0 };
-    VkPhysicalDeviceProperties2 props2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, 0 };
+    VkPhysicalDeviceMaintenance4PropertiesKHR maint4Props{};
+    maint4Props.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_PROPERTIES_KHR;
+    VkPhysicalDeviceProperties2 props2{};
+    props2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
     props2.pNext = &maint4Props;
     vkGetPhysicalDeviceProperties2(*device, &props2);
     maxBufferSize = maint4Props.maxBufferSize;
 
-    VkCommandPoolCreateInfo cpci = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO, 0 };
+    VkCommandPoolCreateInfo cpci{};
+    cpci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     cpci.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
     cpci.queueFamilyIndex = queue.familyIndex;
 
@@ -115,15 +118,18 @@ OIDN_NAMESPACE_BEGIN
 
   SizeAndAlignment VulkanEngine::getBufferByteSizeAndAlignment(size_t byteSize, Storage storage)
   {
-    VkBufferCreateInfo bci = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, 0 };
+    VkBufferCreateInfo bci{};
+    bci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bci.size = byteSize;
     bci.usage = getCommonVkBufferUsageFlags();
     bci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    VkDeviceBufferMemoryRequirementsKHR dbmr = { VK_STRUCTURE_TYPE_DEVICE_BUFFER_MEMORY_REQUIREMENTS_KHR, 0 };
+    VkDeviceBufferMemoryRequirementsKHR dbmr{};
+    dbmr.sType = VK_STRUCTURE_TYPE_DEVICE_BUFFER_MEMORY_REQUIREMENTS_KHR;
     dbmr.pCreateInfo = &bci;
 
-    VkMemoryRequirements2 mr = { VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2, 0 };
+    VkMemoryRequirements2 mr{};
+    mr.sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2;
     device->getDeviceBufferMemoryRequirements(&dbmr, &mr);
 
     return { static_cast<size_t>(mr.memoryRequirements.size),
@@ -197,7 +203,8 @@ OIDN_NAMESPACE_BEGIN
 
   VkCommandBuffer VulkanEngine::beginSingleTimeCommands()
   {
-    VkCommandBufferAllocateInfo cbai = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO, 0 };
+    VkCommandBufferAllocateInfo cbai{};
+    cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     cbai.commandPool = commandPool;
     cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     cbai.commandBufferCount = 1;
@@ -206,7 +213,8 @@ OIDN_NAMESPACE_BEGIN
     VkResult res = vkAllocateCommandBuffers(getVkDevice(), &cbai, &cmdBuf);
     checkResult(res);
 
-    VkCommandBufferBeginInfo cbbi = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, 0 };
+    VkCommandBufferBeginInfo cbbi{};
+    cbbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cbbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     res = vkBeginCommandBuffer(cmdBuf, &cbbi);
     checkResult(res);
@@ -219,7 +227,8 @@ OIDN_NAMESPACE_BEGIN
     VkResult res = vkEndCommandBuffer(cmdBuf);
     checkResult(res);
 
-    VkSubmitInfo si = { VK_STRUCTURE_TYPE_SUBMIT_INFO, 0 };
+    VkSubmitInfo si{};
+    si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount = 1;
     si.pCommandBuffers = &cmdBuf;
     res = vkQueueSubmit(device->getQueue().queue, 1, &si, VK_NULL_HANDLE);
