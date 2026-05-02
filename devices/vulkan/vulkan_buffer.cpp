@@ -70,6 +70,9 @@ OIDN_NAMESPACE_BEGIN
     if (byteSize > engine->getMaxBufferSize())
       throw Exception(Error::OutOfMemory, "buffer size exceeds maximum");
 
+    if (arena)
+      assert(heap);
+
     try
     {
       VkBufferCreateInfo bci{};
@@ -123,6 +126,9 @@ OIDN_NAMESPACE_BEGIN
 
   void VulkanBuffer::postRealloc()
   {
+    if (arena)
+      heap = static_cast<VulkanHeap*>(arena->getHeap());
+
     init();
     Buffer::postRealloc();
   }
