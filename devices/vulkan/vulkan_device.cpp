@@ -109,10 +109,8 @@ OIDN_NAMESPACE_BEGIN
     vkDestroyInstance(this->instance, nullptr);
   };
 
-  VulkanPhysicalDevice::VulkanPhysicalDevice(const Ref<VulkanInstance> &instance, VkPhysicalDevice pDev, int score)
-    : PhysicalDevice(DeviceType::Vulkan, score),
-      instance(instance),
-      pDev(pDev)
+  VulkanPhysicalDevice::VulkanPhysicalDevice(VkPhysicalDevice pDev, int score)
+    : PhysicalDevice(DeviceType::Vulkan, score)
   {
     const bool hasPCIBusInfo = supportsExtension(pDev, VK_EXT_PCI_BUS_INFO_EXTENSION_NAME);
     VkPhysicalDeviceProperties2 props{};
@@ -152,33 +150,6 @@ OIDN_NAMESPACE_BEGIN
       pciFunction = pciProps.pciFunction;
       pciAddressSupported = true;
     }
-  }
-
-  std::vector<Ref<PhysicalDevice>> VulkanDevice::getPhysicalDevices()
-  {
-    auto instance = makeRef<VulkanInstance>();
-    std::vector<VkPhysicalDevice> devices;
-    uint32_t numDevices = 0;
-    VkResult res = vkEnumeratePhysicalDevices(*instance, &numDevices, nullptr);
-    if (res != VK_SUCCESS) return {};
-    devices.resize(numDevices);
-    res = vkEnumeratePhysicalDevices(*instance, &numDevices, devices.data());
-    if (res != VK_SUCCESS) return {};
-
-    std::vector<Ref<PhysicalDevice>> chosenDevices;
-
-    for (size_t i = 0; i < devices.size(); ++i)
-    {
-      VkPhysicalDevice pDev = devices[i];
-      if (!isSupported(pDev))
-        continue;
-
-      // duplicate score logic from other implementations for now
-      int score = (19 << 16) - 1 - i;
-      chosenDevices.push_back(makeRef<VulkanPhysicalDevice>(instance, pDev, score));
-    }
-
-    return chosenDevices;
   }
 
   bool VulkanDevice::isSupported(VkPhysicalDevice pDev)
@@ -225,10 +196,13 @@ OIDN_NAMESPACE_BEGIN
     return hasGraphics && hasMaintenance4 && hasBufferDeviceAddress && hasStorage16 && hasFloat16 && hasInt8;
   }
 
-  VulkanDevice::VulkanDevice(const Ref<VulkanPhysicalDevice>& physicalDevice)
-    : physicalDevice(physicalDevice)
+  VulkanDevice::VulkanDevice(const Ref<VulkanPhysicalDevice>& physicalDevice,
+                             std::shared_ptr<VulkanInstance> instance,
+                             VkPhysicalDevice pDev)
+    : instance(std::move(instance)),
+      physDev(pDev)
   {
-    const VulkanQueueInfo queueInfo = queryQueueInfo(*physicalDevice);
+    const VulkanQueueInfo queueInfo = queryQueueInfo(physDev);
     // TODO for now physical devices can only be created from us
     assert(queueInfo.graphicsQueueFamily.has_value());
     queueFamilyIndex = *queueInfo.graphicsQueueFamily;
@@ -273,7 +247,7 @@ OIDN_NAMESPACE_BEGIN
     ci.pNext = &feats;
     ci.enabledExtensionCount = 1;
     ci.ppEnabledExtensionNames = extensions;
-    VkResult res = vkCreateDevice(*physicalDevice, &ci, nullptr, &this->device);
+    VkResult res = vkCreateDevice(physDev, &ci, nullptr, &this->device);
     checkResult(res);
 
     vkGetDeviceQueue(device, queueFamilyIndex, 0, &queue);
@@ -293,7 +267,7 @@ OIDN_NAMESPACE_BEGIN
   {
     // required feature checks are done on physical device level.
     // We cannot create the device and then query for support
-    if (!isSupported(*physicalDevice))
+    if (!isSupported(physDev))
       throw Exception(Error::UnsupportedHardware, "unsupported Vulkan device");
 
     VkPhysicalDeviceVulkan11Properties v11Props{};
@@ -301,7 +275,7 @@ OIDN_NAMESPACE_BEGIN
     VkPhysicalDeviceProperties2 props{};
     props.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
     props.pNext = &v11Props;
-    vkGetPhysicalDeviceProperties2(*physicalDevice, &props);
+    vkGetPhysicalDeviceProperties2(physDev, &props);
 
     subgroupSize = static_cast<int>(v11Props.subgroupSize);
 

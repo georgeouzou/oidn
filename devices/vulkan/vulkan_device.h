@@ -5,6 +5,7 @@
 
 #include "core/device.h"
 #include <vulkan/vulkan.h>
+#include <memory>
 
 OIDN_NAMESPACE_BEGIN
 
@@ -16,7 +17,7 @@ OIDN_NAMESPACE_BEGIN
 
   void checkResult(VkResult result);
 
-  class VulkanInstance : public RefCount
+  class VulkanInstance
   {
   public:
     VulkanInstance();
@@ -25,28 +26,27 @@ OIDN_NAMESPACE_BEGIN
     operator VkInstance() { return instance; }
 
   private:
+    VulkanInstance(const VulkanInstance&) = delete;
+    VulkanInstance& operator=(const VulkanInstance&) = delete;
+
     VkInstance instance = VK_NULL_HANDLE;
   };
 
+  // only stores metadata to recognise real VkPhysicalDevice
   class VulkanPhysicalDevice : public PhysicalDevice
   {
   public:
-    VulkanPhysicalDevice(const Ref<VulkanInstance> &instance, VkPhysicalDevice physDevice, int score);
-
-    operator VkPhysicalDevice() { return pDev; }
-
-  private:
-    Ref<VulkanInstance> instance;
-    VkPhysicalDevice pDev = VK_NULL_HANDLE;
+    VulkanPhysicalDevice(VkPhysicalDevice pDev, int score);
   };
 
   class VulkanDevice final : public Device
   {
   public:
-    static std::vector<Ref<PhysicalDevice>> getPhysicalDevices();
     static bool isSupported(VkPhysicalDevice pDev);
 
-    explicit VulkanDevice(const Ref<VulkanPhysicalDevice>& physicalDevice);
+    VulkanDevice(const Ref<VulkanPhysicalDevice>& physicalDevice,
+                 std::shared_ptr<VulkanInstance> instance,
+                 VkPhysicalDevice pDev);
     ~VulkanDevice();
 
     DeviceType getType() const override { return DeviceType::Vulkan; }
@@ -54,7 +54,7 @@ OIDN_NAMESPACE_BEGIN
     void wait() override;
 
     operator VkDevice() const { return device; }
-    operator VkPhysicalDevice() const { return *physicalDevice; }
+    operator VkPhysicalDevice() const { return physDev; }
     VulkanQueue getQueue() const { return { queue, queueFamilyIndex }; }
     void getDeviceBufferMemoryRequirements(const VkDeviceBufferMemoryRequirementsKHR *pInfo, VkMemoryRequirements2 *pMemoryRequirements) const { vkGetDeviceBufferMemoryRequirements(device, pInfo, pMemoryRequirements); }
     int getSubgroupSize() const { return subgroupSize; }
@@ -62,7 +62,8 @@ OIDN_NAMESPACE_BEGIN
   private:
     void init() override;
 
-    Ref<VulkanPhysicalDevice> physicalDevice;
+    std::shared_ptr<VulkanInstance> instance; // Keep instance alive for the lifetime of this device.
+    VkPhysicalDevice physDev = VK_NULL_HANDLE;
     VkDevice device = VK_NULL_HANDLE;
     VkQueue queue = VK_NULL_HANDLE;
     uint32_t queueFamilyIndex = 0;

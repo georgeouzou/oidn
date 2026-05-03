@@ -29,15 +29,19 @@ OIDN_NAMESPACE_BEGIN
     // Returns the global context without initialization
     static Context& get();
 
-    // Registers a device type (should be called by device modules)
+    // Registers a device type (should be called by device modules).
+    // If factory is non-null it is used directly; otherwise a default DeviceFactoryT is constructed.
     template<typename DeviceFactoryT>
-    static void registerDeviceType(DeviceType type, const std::vector<Ref<PhysicalDevice>>& physicalDevices)
+    static void registerDeviceType(DeviceType type,
+                                   const std::vector<Ref<PhysicalDevice>>& physicalDevices,
+                                   std::unique_ptr<DeviceFactoryT> factory = nullptr)
     {
       if (physicalDevices.empty())
         return;
 
       Context& ctx = get();
-      ctx.deviceFactories[type] = std::unique_ptr<DeviceFactory>(new DeviceFactoryT);
+      ctx.deviceFactories[type] = factory ? std::move(factory)
+                                          : std::unique_ptr<DeviceFactory>(new DeviceFactoryT);
 
       // Add the detected physical devices to the context
       for (const auto& physicalDevice : physicalDevices)
