@@ -6,6 +6,7 @@
 #include "common/platform.h"
 #include "core/ref.h"
 #include <vulkan/vulkan.h>
+#include <string>
 
 OIDN_NAMESPACE_BEGIN
 
@@ -18,12 +19,14 @@ OIDN_NAMESPACE_BEGIN
                                    const uint32_t* spirvData,
                                    uint32_t spirvSize,
                                    VulkanSize3D localSize,
-                                   uint32_t pushConstantSize);
+                                   uint32_t pushConstantSize,
+                                   std::string name);
     ~VulkanComputePipeline();
 
     operator VkPipeline() const { return pipeline; }
     operator VkPipelineLayout() const { return pipelineLayout; }
     uint32_t getPushConstantSize() const { return pushConstantSize; }
+    const std::string& getName() const { return name; }
 
   private:
     void free();
@@ -33,6 +36,7 @@ OIDN_NAMESPACE_BEGIN
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     VkPipeline pipeline = VK_NULL_HANDLE;
     uint32_t pushConstantSize = 0;
+    std::string name;
   };
 
 OIDN_NAMESPACE_END

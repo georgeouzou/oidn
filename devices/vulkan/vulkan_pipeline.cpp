@@ -11,8 +11,9 @@ OIDN_NAMESPACE_BEGIN
                                                const uint32_t* spirvData,
                                                uint32_t spirvSize,
                                                VulkanSize3D localSize,
-                                               uint32_t pushConstantSize)
-    : device(device), pushConstantSize(pushConstantSize)
+                                               uint32_t pushConstantSize,
+                                               std::string name)
+    : device(device), pushConstantSize(pushConstantSize), name(std::move(name))
   {
     VkPushConstantRange pushConstantRange = {};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;

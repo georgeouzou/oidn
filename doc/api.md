@@ -655,6 +655,7 @@ Name                     Description
 `OIDN_SET_AFFINITY`      overrides `setAffinity` device parameter
 `OIDN_NUM_SUBDEVICES`    overrides number of SYCL sub-devices to use (e.g. for Intel® Data Center GPU Max Series)
 `OIDN_VERBOSE`           overrides `verbose` device parameter
+`OIDN_VULKAN_DEBUG_LABELS` enables Vulkan debug labels around kernel dispatches when set to `1`
 ------------------------ ---------------------------------------------------------------------------
 : Environment variables supported by Open Image Denoise.
 

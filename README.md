@@ -1100,18 +1100,19 @@ Possible error codes, i.e., valid constants of type `OIDNError`.
 Open Image Denoise supports environment variables for overriding certain
 settings at runtime, which can be useful for debugging and development:
 
-| Name                  | Description                                                                                                                         |
-| :-------------------- | :---------------------------------------------------------------------------------------------------------------------------------- |
-| `OIDN_DEFAULT_DEVICE` | overrides what physical device to use with `OIDN_DEVICE_TYPE_DEFAULT`; can be `cpu`, `sycl`, `cuda`, `hip`, or a physical device ID |
-| `OIDN_DEVICE_CPU`     | value of 0 disables CPU device support                                                                                              |
-| `OIDN_DEVICE_SYCL`    | value of 0 disables SYCL device support                                                                                             |
-| `OIDN_DEVICE_CUDA`    | value of 0 disables CUDA device support                                                                                             |
-| `OIDN_DEVICE_HIP`     | value of 0 disables HIP device support                                                                                              |
-| `OIDN_DEVICE_METAL`   | value of 0 disables Metal device support                                                                                            |
-| `OIDN_NUM_THREADS`    | overrides `numThreads` device parameter                                                                                             |
-| `OIDN_SET_AFFINITY`   | overrides `setAffinity` device parameter                                                                                            |
-| `OIDN_NUM_SUBDEVICES` | overrides number of SYCL sub-devices to use (e.g. for Intel® Data Center GPU Max Series)                                            |
-| `OIDN_VERBOSE`        | overrides `verbose` device parameter                                                                                                |
+| Name                       | Description                                                                                                                         |
+| :------------------------- | :---------------------------------------------------------------------------------------------------------------------------------- |
+| `OIDN_DEFAULT_DEVICE`      | overrides what physical device to use with `OIDN_DEVICE_TYPE_DEFAULT`; can be `cpu`, `sycl`, `cuda`, `hip`, or a physical device ID |
+| `OIDN_DEVICE_CPU`          | value of 0 disables CPU device support                                                                                              |
+| `OIDN_DEVICE_SYCL`         | value of 0 disables SYCL device support                                                                                             |
+| `OIDN_DEVICE_CUDA`         | value of 0 disables CUDA device support                                                                                             |
+| `OIDN_DEVICE_HIP`          | value of 0 disables HIP device support                                                                                              |
+| `OIDN_DEVICE_METAL`        | value of 0 disables Metal device support                                                                                            |
+| `OIDN_NUM_THREADS`         | overrides `numThreads` device parameter                                                                                             |
+| `OIDN_SET_AFFINITY`        | overrides `setAffinity` device parameter                                                                                            |
+| `OIDN_NUM_SUBDEVICES`      | overrides number of SYCL sub-devices to use (e.g. for Intel® Data Center GPU Max Series)                                            |
+| `OIDN_VERBOSE`             | overrides `verbose` device parameter                                                                                                |
+| `OIDN_VULKAN_DEBUG_LABELS` | enables Vulkan debug labels around kernel dispatches when set to `1`                                                                |
 
 Environment variables supported by Open Image Denoise.
 

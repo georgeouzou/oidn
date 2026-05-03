@@ -257,7 +257,8 @@ OIDN_NAMESPACE_BEGIN
                                               pipeline.spirvData,
                                               pipeline.spirvSize,
                                               localSize,
-                                              pushConstantSize);
+                                              pushConstantSize,
+                                              kernelName);
       }
     }
     throw Exception(Error::InvalidArgument, "could not create Vulkan pipeline");
@@ -274,6 +275,7 @@ OIDN_NAMESPACE_BEGIN
     assert(kernelSize <= 256);
 
     VkCommandBuffer cmdBuf = beginSingleTimeCommands();
+    device->cmdBeginDebugUtilsLabel(cmdBuf, pipeline->getName().c_str());
 
     vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_COMPUTE, *pipeline);
     vkCmdPushConstants(cmdBuf, *pipeline, VK_SHADER_STAGE_COMPUTE_BIT, 0,
@@ -281,6 +283,7 @@ OIDN_NAMESPACE_BEGIN
 
     vkCmdDispatch(cmdBuf, numGroups.x, numGroups.y, numGroups.z);
 
+    device->cmdEndDebugUtilsLabel(cmdBuf);      
     endSingleTimeCommands(cmdBuf);
   }
 

@@ -24,12 +24,14 @@ OIDN_NAMESPACE_BEGIN
     ~VulkanInstance();
 
     operator VkInstance() { return instance; }
+    bool hasDebugUtilsLabels() const { return debugUtilsLabels; }
 
   private:
     VulkanInstance(const VulkanInstance&) = delete;
     VulkanInstance& operator=(const VulkanInstance&) = delete;
 
     VkInstance instance = VK_NULL_HANDLE;
+    bool debugUtilsLabels = false;
   };
 
   // only stores metadata to recognise real VkPhysicalDevice
@@ -59,6 +61,9 @@ OIDN_NAMESPACE_BEGIN
     void getDeviceBufferMemoryRequirements(const VkDeviceBufferMemoryRequirementsKHR *pInfo, VkMemoryRequirements2 *pMemoryRequirements) const { vkGetDeviceBufferMemoryRequirements(device, pInfo, pMemoryRequirements); }
     int getSubgroupSize() const { return subgroupSize; }
 
+    void cmdBeginDebugUtilsLabel(VkCommandBuffer cmdBuf, const char *label) const;
+    void cmdEndDebugUtilsLabel(VkCommandBuffer cmdBuf) const;
+
   private:
     void init() override;
 
@@ -68,8 +73,11 @@ OIDN_NAMESPACE_BEGIN
     VkQueue queue = VK_NULL_HANDLE;
     uint32_t queueFamilyIndex = 0;
     int subgroupSize = 1;
+    bool debugUtilsLabels = false;
 
     PFN_vkGetDeviceBufferMemoryRequirementsKHR vkGetDeviceBufferMemoryRequirements = nullptr;
+    PFN_vkCmdBeginDebugUtilsLabelEXT vkCmdBeginDebugUtilsLabel = nullptr;
+    PFN_vkCmdEndDebugUtilsLabelEXT vkCmdEndDebugUtilsLabel = nullptr;
   };
 
 OIDN_NAMESPACE_END

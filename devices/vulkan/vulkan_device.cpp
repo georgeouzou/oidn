@@ -88,6 +88,12 @@ OIDN_NAMESPACE_BEGIN
       }
     }
 
+    debugUtilsLabels = getEnvVarOrDefault("OIDN_VULKAN_DEBUG_LABELS", 0) != 0;
+
+    std::vector<const char*> extensions;
+    if (debugUtilsLabels)
+      extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
     VkApplicationInfo ai{};
     ai.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     ai.pApplicationName = "Open Image Denoise";
@@ -99,6 +105,8 @@ OIDN_NAMESPACE_BEGIN
     VkInstanceCreateInfo ici{};
     ici.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     ici.pApplicationInfo = &ai;
+    ici.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+    ici.ppEnabledExtensionNames = extensions.data();
 
     VkResult res = vkCreateInstance(&ici, nullptr, &this->instance);
     checkResult(res);
@@ -255,6 +263,15 @@ OIDN_NAMESPACE_BEGIN
     vkGetDeviceBufferMemoryRequirements =
       (PFN_vkGetDeviceBufferMemoryRequirementsKHR)vkGetDeviceProcAddr(device, "vkGetDeviceBufferMemoryRequirementsKHR");
     assert(vkGetDeviceBufferMemoryRequirements != nullptr);
+
+    if (this->instance->hasDebugUtilsLabels())
+    {
+      vkCmdBeginDebugUtilsLabel = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetInstanceProcAddr(*this->instance, "vkCmdBeginDebugUtilsLabelEXT");
+      vkCmdEndDebugUtilsLabel = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetInstanceProcAddr(*this->instance, "vkCmdEndDebugUtilsLabelEXT");
+      debugUtilsLabels = true;
+      assert(vkCmdBeginDebugUtilsLabel != nullptr);
+      assert(vkCmdEndDebugUtilsLabel != nullptr);
+    }
   }
 
   VulkanDevice::~VulkanDevice()
@@ -299,6 +316,23 @@ OIDN_NAMESPACE_BEGIN
   {
     if (!subdevices.empty())
       subdevices[0]->getEngine()->wait();
+  }
+
+  void VulkanDevice::cmdBeginDebugUtilsLabel(VkCommandBuffer cmdBuf, const char *label) const
+  {
+    if (!debugUtilsLabels) return;
+
+    VkDebugUtilsLabelEXT labelInfo{};
+    labelInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+    labelInfo.pLabelName = label;
+    vkCmdBeginDebugUtilsLabel(cmdBuf, &labelInfo);
+  }
+
+  void VulkanDevice::cmdEndDebugUtilsLabel(VkCommandBuffer cmdBuf) const
+  {
+    if (!debugUtilsLabels) return;
+
+    vkCmdEndDebugUtilsLabel(cmdBuf);
   }
 
 OIDN_NAMESPACE_END
