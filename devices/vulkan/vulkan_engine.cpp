@@ -20,6 +20,9 @@
 #include "devices/vulkan/inputProcess_f16_hwc_9.h"
 #include "devices/vulkan/outputProcess.h"
 #include "devices/vulkan/imageCopy.h"
+#include "devices/vulkan/convNone.h"
+#include "devices/vulkan/convUpsample.h"
+#include "devices/vulkan/convPool.h"
 #include "devices/vulkan/conv.h"
 
 #include <cstring>
@@ -76,6 +79,21 @@ namespace
       uint32_t(sizeof(oidn::blobs::autoexposureReduceFinal_1024)),
     },
 
+    {
+      "convNone",
+      reinterpret_cast<const uint32_t*>(oidn::blobs::convNone),
+      uint32_t(sizeof(oidn::blobs::convNone)),
+    },
+    {
+      "convUpsample",
+      reinterpret_cast<const uint32_t*>(oidn::blobs::convUpsample),
+      uint32_t(sizeof(oidn::blobs::convUpsample)),
+    },
+    {
+      "convPool",
+      reinterpret_cast<const uint32_t*>(oidn::blobs::convPool),
+      uint32_t(sizeof(oidn::blobs::convPool)),
+    },
     {
       "conv",
       reinterpret_cast<const uint32_t*>(oidn::blobs::conv),

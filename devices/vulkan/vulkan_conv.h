@@ -37,6 +37,9 @@ OIDN_NAMESPACE_BEGIN
 
     void finalize() override
     {
+      convNonePipeline = engine->newComputePipeline<VulkanConvKernel, 3>("convNone", WorkDim<3>(8, 8, 4));
+      convUpsamplePipeline = engine->newComputePipeline<VulkanConvKernel, 3>("convUpsample", WorkDim<3>(8, 8, 4));
+      convPoolPipeline = engine->newComputePipeline<VulkanConvKernel, 3>("convPool", WorkDim<3>(8, 8, 4));
       pipeline = engine->newComputePipeline<VulkanConvKernel, 3>("conv");
     }
 
@@ -58,7 +61,24 @@ OIDN_NAMESPACE_BEGIN
       else
         globalSize = WorkDim<3>(dst->getH(), dst->getW(), dst->getPaddedC());
 
-      engine->submitKernelGlobal(globalSize, kernel, pipeline);
+      Ref<VulkanComputePipeline> tiledPipeline;
+      if (postOp == PostOp::None)
+        tiledPipeline = convNonePipeline;
+      else if (postOp == PostOp::Upsample)
+        tiledPipeline = convUpsamplePipeline;
+      else if (postOp == PostOp::Pool)
+        tiledPipeline = convPoolPipeline;
+
+      if (tiledPipeline)
+      {
+        const WorkDim<3> localSize(8, 8, 4);
+        const WorkDim<3> numGroups = ceil_div(globalSize, localSize);
+        engine->submitKernel(numGroups, kernel, tiledPipeline);
+      }
+      else
+      {
+        engine->submitKernelGlobal(globalSize, kernel, pipeline);
+      }
     }
 
   private:
@@ -79,6 +99,9 @@ OIDN_NAMESPACE_BEGIN
     }
 
     VulkanEngine* engine;
+    Ref<VulkanComputePipeline> convNonePipeline;
+    Ref<VulkanComputePipeline> convUpsamplePipeline;
+    Ref<VulkanComputePipeline> convPoolPipeline;
     Ref<VulkanComputePipeline> pipeline;
   };
 
